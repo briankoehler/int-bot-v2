@@ -1,0 +1,25 @@
+{
+  "name": "int-bot-v2",
+  "version": "1.0.0",
+  "description": "Discord bot to track inters.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc && node --experimental-specifier-resolution=node build/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.25.0",
+    "discord.js": "^13.6.0",
+    "discordx": "^9.1.16",
+    "dotenv": "^16.0.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.17",
+    "typescript": "^4.5.5"
+  },
+  "type": "module"
+}
