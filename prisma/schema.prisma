@@ -1,0 +1,31 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Summoner {
+  puuid         String    @id
+  name          String
+  Stats         PlayerStats[]
+}
+
+// model Match {
+
+// }
+
+model PlayerStats {
+  matchId       String    @id
+  summoner      Summoner  @relation(fields: [summonerPuuid], references: [puuid])
+  summonerPuuid String
+  kills         Int
+  deaths        Int
+  assists       Int
+  champion      String
+}

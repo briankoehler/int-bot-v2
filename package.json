@@ -15,6 +15,7 @@
     "discord.js": "^13.6.0",
     "discordx": "^9.1.16",
     "dotenv": "^16.0.0",
+    "prisma": "^3.9.2",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
