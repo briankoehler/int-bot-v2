@@ -10,22 +10,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Team {
+  BLUE
+  RED
+}
+
 model Summoner {
   puuid         String    @id
   name          String
   Stats         PlayerStats[]
+  @@map("summoner")
 }
 
-// model Match {
-
-// }
+model Match {
+  matchId       String    @id @map("match_id")
+  startTime     BigInt    @db.BigInt @map("start_time")
+  duration      BigInt    @db.BigInt
+  queue         String
+  map           String
+  version       String
+  winningTeam   Team
+  playerStats   PlayerStats[]
+  @@map("match")
+}
 
 model PlayerStats {
-  matchId       String    @id
-  summoner      Summoner  @relation(fields: [summonerPuuid], references: [puuid])
-  summonerPuuid String
+  id            String    @id
+  summoner      Summoner  @relation(fields: [puuid], references: [puuid])
+  puuid         String
+  match         Match     @relation(fields: [matchId], references: [matchId])
+  matchId       String    @map("match_id")
   kills         Int
   deaths        Int
   assists       Int
   champion      String
+  position      String
+  team          Team
+  @@map("player_stats")
 }
