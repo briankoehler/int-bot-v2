@@ -15,36 +15,53 @@ enum Team {
   RED
 }
 
+model Guild {
+  id                String              @id
+  name              String
+  channelId         String              @map("channel_id")
+  following         GuildFollowing[]
+  @@map("guild")
+}
+
 model Summoner {
-  puuid         String    @id
-  name          String
-  Stats         PlayerStats[]
+  puuid             String            @id
+  name              String
+  stats             PlayerStats[]
+  followers         GuildFollowing[]
   @@map("summoner")
 }
 
+model GuildFollowing {
+  id                String            @id
+  guild             Guild             @relation(fields: [guildId], references: [id])
+  guildId           String
+  summoner          Summoner          @relation(fields: [puuid], references: [puuid])
+  puuid             String
+}
+
 model Match {
-  matchId       String    @id @map("match_id")
-  startTime     BigInt    @db.BigInt @map("start_time")
-  duration      BigInt    @db.BigInt
-  queue         String
-  map           String
-  version       String
-  winningTeam   Team
-  playerStats   PlayerStats[]
+  matchId           String            @id @map("match_id")
+  startTime         BigInt            @db.BigInt @map("start_time")
+  duration          BigInt            @db.BigInt
+  queue             String
+  map               String
+  version           String
+  winningTeam       Team             @map("winning_team")
+  playerStats       PlayerStats[]
   @@map("match")
 }
 
 model PlayerStats {
-  id            String    @id
-  summoner      Summoner  @relation(fields: [puuid], references: [puuid])
-  puuid         String
-  match         Match     @relation(fields: [matchId], references: [matchId])
-  matchId       String    @map("match_id")
-  kills         Int
-  deaths        Int
-  assists       Int
-  champion      String
-  position      String
-  team          Team
+  id                String            @id
+  summoner          Summoner          @relation(fields: [puuid], references: [puuid])
+  puuid             String
+  match             Match            @relation(fields: [matchId], references: [matchId])
+  matchId           String           @map("match_id")
+  kills             Int
+  deaths            Int   
+  assists           Int
+  champion          String
+  position          String
+  team              Team
   @@map("player_stats")
 }
