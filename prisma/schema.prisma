@@ -27,13 +27,13 @@ model Guild {
 model Summoner {
   puuid             String            @id
   name              String
-  stats             PlayerStats[]
+  stats             SummonerStats[]
   followers         GuildFollowing[]
   @@map("summoner")
 }
 
 model GuildFollowing {
-  id                String            @id
+  id                String            @id @default(uuid())
   guild             Guild             @relation(fields: [guildId], references: [id])
   guildId           String
   summoner          Summoner          @relation(fields: [puuid], references: [puuid])
@@ -42,27 +42,29 @@ model GuildFollowing {
 
 model Match {
   matchId           String            @id @map("match_id")
-  startTime         BigInt            @db.BigInt @map("start_time")
-  duration          BigInt            @db.BigInt
+  startTime         DateTime          @db.Timestamp @map("start_time")
+  duration          Int               
   queue             String
   map               String
   version           String
-  winningTeam       Team             @map("winning_team")
-  playerStats       PlayerStats[]
+  winningTeam       Team              @map("winning_team")
+  summonerStats     SummonerStats[]
   @@map("match")
 }
 
-model PlayerStats {
-  id                String            @id
+model SummonerStats {
+  id                String            @id @default(uuid())
   summoner          Summoner          @relation(fields: [puuid], references: [puuid])
   puuid             String
-  match             Match            @relation(fields: [matchId], references: [matchId])
-  matchId           String           @map("match_id")
+  match             Match             @relation(fields: [matchId], references: [matchId])
+  matchId           String            @map("match_id")
   kills             Int
   deaths            Int   
   assists           Int
   champion          String
   position          String
   team              Team
-  @@map("player_stats")
+  totalTimeDead     Int               @map("total_time_dead")
+  challenges        Json
+  @@map("summoner_stats")
 }

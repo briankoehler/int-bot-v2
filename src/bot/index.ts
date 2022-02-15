@@ -1,7 +1,7 @@
-import { config } from '@/config'
 import { Intents } from 'discord.js'
 import { Client } from 'discordx'
 import 'dotenv/config'
+import { config } from '../config'
 
 export const client = new Client({
     botId: 'int-bot-v2',
