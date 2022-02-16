@@ -18,7 +18,6 @@ client.on('ready', async () => {
 
 const run = async () => {
     client.login(config.BOT_TOKEN)
-    // const riotClient = new RiotClient(config.RIOT_TOKEN)
 }
 
 await run()

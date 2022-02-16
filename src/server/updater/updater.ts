@@ -106,6 +106,7 @@ export class Updater {
                 // Determine if summoner is followed
                 const puuid = data.puuid
                 const testCount = await prisma.summoner.count({ where: { puuid } })
+
                 if (testCount === 0) continue
 
                 const champion = await convertChampionIdToName(data.championId)
