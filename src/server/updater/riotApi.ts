@@ -23,7 +23,7 @@ export class RiotApi {
             const resp = await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puid}/ids?startTime=${origin}&start=0&count=100`)
             return resp.data
         }
-        const resp = await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puid}/ids?start=0&count=100`)
+        const resp = await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puid}/ids?start=0&count=10`)
         return resp.data
     }
 

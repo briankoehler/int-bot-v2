@@ -42,7 +42,7 @@ model GuildFollowing {
 
 model Match {
   matchId           String            @id @map("match_id")
-  startTime         DateTime          @db.Timestamp @map("start_time")
+  startTime         DateTime          @map("start_time")
   duration          Int               
   queue             String
   map               String
