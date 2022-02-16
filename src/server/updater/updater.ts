@@ -25,12 +25,18 @@ export class Updater {
      * @returns Array of PUUIDs
      */
     private getPuuids = async () => {
-        const puuids = (await prisma.summoner.findMany({
-            select: {
-                puuid: true
-            }
-        })).map(s => s.puuid)
-        return new Set(puuids)
+        try {
+            const puuids = (await prisma.summoner.findMany({
+                select: {
+                    puuid: true
+                }
+            })).map(s => s.puuid)
+            return new Set(puuids)
+        }
+        catch (e) {
+            console.error('An error occurred when getting PUUIDS: ', e)
+            return new Set<string>()
+        }
     }
 
     /**
@@ -41,21 +47,26 @@ export class Updater {
     private getMatchIds = async (puuids: Set<string>) => {
         const newMatches: Set<string> = new Set()
         for (const puuid of puuids) {
-            // Get latest timestamp of summoner from db
-            const timestamps = (await prisma.summonerStats.findMany({
-                where: { puuid },
-                select: {
-                    match: true
-                }
-            })).map(m => Math.round(m.match.startTime.getTime() / 1000) + m.match.duration + 120) // Buffer of 120 seconds
+            try {
+                // Get latest timestamp of summoner from db
+                const timestamps = (await prisma.summonerStats.findMany({
+                    where: { puuid },
+                    select: {
+                        match: true
+                    }
+                })).map(m => Math.round(m.match.startTime.getTime() / 1000) + m.match.duration + 120) // Buffer of 120 seconds
 
-            // Get latest match ID from Riot API
-            let matchIds: string[]
-            if (timestamps.length > 0) matchIds = await this.riot.getSummonerMatchIds(puuid, Math.max(...timestamps))
-            else matchIds = await this.riot.getSummonerMatchIds(puuid)
+                // Get latest match ID from Riot API
+                let matchIds: string[]
+                if (timestamps.length > 0) matchIds = await this.riot.getSummonerMatchIds(puuid, Math.max(...timestamps))
+                else matchIds = await this.riot.getSummonerMatchIds(puuid)
 
-            // Add new match IDs to set
-            matchIds.forEach(newMatches.add, newMatches)
+                // Add new match IDs to set
+                matchIds.forEach(newMatches.add, newMatches)
+            }
+            catch (e) {
+                console.error('An error occurred when getting match IDs: ', e)
+            }
         }
         return newMatches
     }
@@ -91,26 +102,31 @@ export class Updater {
      */
     private parseAndInsertSummonerStats = async (summonersData: any[], matchId: string) => {
         for (const data of summonersData) {
-            // Determine if summoner is followed
-            const puuid = data.puuid
-            const testCount = await prisma.summoner.count({ where: { puuid } })
-            if (testCount === 0) continue
+            try {
+                // Determine if summoner is followed
+                const puuid = data.puuid
+                const testCount = await prisma.summoner.count({ where: { puuid } })
+                if (testCount === 0) continue
 
-            const champion = await convertChampionIdToName(data.championId)
-            await prisma.summonerStats.create({
-                data: {
-                    puuid,
-                    matchId,
-                    kills: data.kills,
-                    deaths: data.deaths,
-                    assists: data.assists,
-                    champion,
-                    position: data.teamPosition,
-                    team: data.teamId === 100 ? 'BLUE' : 'RED',
-                    totalTimeDead: data.totalTimeSpentDead,
-                    challenges: data.challenges
-                }
-            })
+                const champion = await convertChampionIdToName(data.championId)
+                await prisma.summonerStats.create({
+                    data: {
+                        puuid,
+                        matchId,
+                        kills: data.kills,
+                        deaths: data.deaths,
+                        assists: data.assists,
+                        champion,
+                        position: data.teamPosition,
+                        team: data.teamId === 100 ? 'BLUE' : 'RED',
+                        totalTimeDead: data.totalTimeSpentDead,
+                        challenges: data.challenges
+                    }
+                })
+            }
+            catch (e) {
+                console.error('An error occurred when parsing summoner stats: ', e)
+            }
         }
     }
 }
