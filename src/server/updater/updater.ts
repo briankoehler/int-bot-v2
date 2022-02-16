@@ -1,5 +1,6 @@
 import { config } from '../../config'
 import { prisma } from '../server'
+import { convertChampionIdToName, convertQueueIdToNameAndMap } from './helpers'
 import { RiotApi } from './riotApi'
 
 export class Updater {
@@ -12,11 +13,11 @@ export class Updater {
         const puuids = await this.getPuuids()
         const newMatches = await this.getMatchIds(puuids)
 
-        for (const matchId of newMatches) {
+        newMatches.forEach(async matchId => {
             const data = await this.riot.getMatch(matchId)
             await this.parseAndInsertMatch(data)
             await this.parseAndInsertSummonerStats(data.info.participants, matchId)
-        }
+        })
     }
 
     /**
@@ -46,7 +47,7 @@ export class Updater {
                 select: {
                     match: true
                 }
-            })).map(m => (m.match.startTime.getTime() / 1000) + m.match.duration)
+            })).map(m => Math.round(m.match.startTime.getTime() / 1000) + m.match.duration + 120) // Buffer of 120 seconds
 
             // Get latest match ID from Riot API
             let matchIds: string[]
@@ -60,30 +61,42 @@ export class Updater {
     }
 
     /**
-     * Get expected data from an API response.
+     * Get expected match data from an API response.
      * @param data Match response data from Riot API
      */
     private parseAndInsertMatch = async (data: any) => {
-        await prisma.match.create({
-            data: {
-                matchId: data.metadata.matchId,
-                startTime: new Date(data.info.gameStartTimestamp),
-                duration: data.info.gameDuration,
-                queue: 'PLACEHOLDER',
-                map: 'PLACEHOLDER',
-                version: data.info.gameVersion,
-                winningTeam: data.info.participants.win ? 'BLUE' : 'RED'
-            }
-        })
+        try {
+            const [queue, map] = await convertQueueIdToNameAndMap(data.info.queueId)
+            await prisma.match.create({
+                data: {
+                    matchId: data.metadata.matchId,
+                    startTime: new Date(data.info.gameStartTimestamp),
+                    duration: data.info.gameDuration,
+                    queue,
+                    map,
+                    version: data.info.gameVersion,
+                    winningTeam: data.info.participants.win ? 'BLUE' : 'RED'
+                }
+            })
+        }
+        catch (e) {
+            console.error('An error occurred.', e)
+        }
     }
 
+    /**
+     * Get expected summoner data from a match API response.
+     * @param summonersData Participants data from Riot API.
+     * @param matchId The match that the data corresponds to.
+     */
     private parseAndInsertSummonerStats = async (summonersData: any[], matchId: string) => {
         for (const data of summonersData) {
             // Determine if summoner is followed
             const puuid = data.puuid
             const testCount = await prisma.summoner.count({ where: { puuid } })
-            if (testCount <= 0) continue
+            if (testCount === 0) continue
 
+            const champion = await convertChampionIdToName(data.championId)
             await prisma.summonerStats.create({
                 data: {
                     puuid,
@@ -91,7 +104,7 @@ export class Updater {
                     kills: data.kills,
                     deaths: data.deaths,
                     assists: data.assists,
-                    champion: 'PLACEHOLDER',
+                    champion,
                     position: data.teamPosition,
                     team: data.teamId === 100 ? 'BLUE' : 'RED',
                     totalTimeDead: data.totalTimeSpentDead,
