@@ -6,6 +6,7 @@ import axios from 'axios'
  export class Converter {
     private static championMap: { [id: number]: string } = {}
     private static queueMap: { [id: number]: [string, string] } = {}
+    private static initialized = false
 
     /**
      * Construct the necessary maps to convert constants. This is done to avoid iterating
@@ -16,9 +17,9 @@ import axios from 'axios'
         const version: string = (await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')).data[0]
 
         // Construct an id-to-champion map for current version
-        const championData: { [key: string]: { key: string } } = (await axios.get(`http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)).data.data
+        const championData: { [key: string]: { key: string, name: string } } = (await axios.get(`http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)).data.data
         for (const champion in championData) {
-            Converter.championMap[Number(championData[champion].key)] = champion
+            Converter.championMap[Number(championData[champion].key)] = championData[champion].name
         }
 
         // Construct an id-to-queue-and-map map
@@ -26,6 +27,8 @@ import axios from 'axios'
         for (const queue of queueData) {
             Converter.queueMap[queue.queueId] = [queue.description, queue.map]
         }
+
+        Converter.initialized = true
     }
 
     /**
@@ -34,6 +37,7 @@ import axios from 'axios'
      * @returns Both the name and map the match was in
      */
     static convertQueueIdToNameAndMap = async (id: number): Promise<[string, string]> => {
+        Converter.checkInitialized()
         if (Converter.queueMap[id] !== undefined) return Converter.queueMap[id]
         throw Error(`Unable to parse queue ID: ${id}`)
     }
@@ -44,7 +48,12 @@ import axios from 'axios'
      * @returns Name of champion
      */
     static convertChampionIdToName = async (id: number): Promise<string> => {
+        Converter.checkInitialized()
         if (Converter.championMap[id] !== undefined) return Converter.championMap[id]
         throw Error(`Unable to parse champion ID: ${id}`)
+    }
+
+    private static checkInitialized = () => {
+        if (!Converter.initialized) throw Error('Converter not yet initialized.')
     }
 }
