@@ -1,13 +1,13 @@
 import axios from 'axios'
 import { config } from '../src/config'
 import { RiotApi } from '../src/server/updater/riotApi'
-import { ErrorResponse, MatchResponse } from '../src/server/updater/riotResponses'
+import { RiotResponse } from '../src/server/updater/riotResponses'
 
 jest.mock('axios')
 
 const riotApi = new RiotApi(config.RIOT_TOKEN)
 
-const errorResponse: ErrorResponse = {
+const errorResponse: RiotResponse.ErrorResponse = {
     status: {
         message: 'Test message',
         status_code: 400
@@ -80,7 +80,7 @@ describe('get match IDs', () => {
 
 describe('get match data', () => {
     it('returns 4 matches', async () => {
-        const data: MatchResponse = {
+        const data: RiotResponse.MatchResponse = {
             metadata: {
                 'matchId': 'abc',
                 participants: ['abc', 'def', 'ghi', 'jkl'],

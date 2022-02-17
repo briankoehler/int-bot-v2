@@ -1,6 +1,6 @@
 import { config } from '../../config'
 import { prisma } from '../server'
-import { convertChampionIdToName, convertQueueIdToNameAndMap } from './helpers'
+import { Converter } from './converter'
 import { RiotApi } from './riotApi'
 
 export class Updater {
@@ -12,7 +12,8 @@ export class Updater {
     update = async () => {
         const puuids = await this.getPuuids()
         const newMatches = await this.getMatchIds(puuids)
-
+        await Converter.init()
+        
         newMatches.forEach(async matchId => {
             const data = await this.riot.getMatch(matchId)
             await this.parseAndInsertMatch(data)
@@ -77,7 +78,7 @@ export class Updater {
      */
     private parseAndInsertMatch = async (data: any) => {
         try {
-            const [queue, map] = await convertQueueIdToNameAndMap(data.info.queueId)
+            const [queue, map] = await Converter.convertQueueIdToNameAndMap(data.info.queueId)
             await prisma.match.create({
                 data: {
                     matchId: data.metadata.matchId,
@@ -109,7 +110,7 @@ export class Updater {
 
                 if (testCount === 0) continue
 
-                const champion = await convertChampionIdToName(data.championId)
+                const champion = await Converter.convertChampionIdToName(data.championId)
                 await prisma.summonerStats.create({
                     data: {
                         puuid,
