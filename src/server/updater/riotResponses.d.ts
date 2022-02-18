@@ -1,4 +1,26 @@
 
+export namespace DataDragonResponse {
+    interface ChampionResponse {
+        type: 'champion',
+        data: {
+            [key: string]: {
+                key: string,
+                name: string
+            }
+        }
+    }
+
+    interface Queue {
+        queueId: number,
+        map: string,
+        description: string | null
+    }
+
+    type QueueResponse = Queue[]
+
+    type VersionResponse = string[]
+}
+
 export namespace RiotResponse {
     interface SummonerResponse {
         id: string,
@@ -9,14 +31,14 @@ export namespace RiotResponse {
         revisionDate: number,
         summonerLevel: number
     }
-    
+
     interface ErrorResponse {
         status: {
             message: string,
             status_code: number
         }
     }
-    
+
     interface MatchResponse {
         metadata: {
             matchId: string,
@@ -35,7 +57,7 @@ export namespace RiotResponse {
             participants: ParticipantData[]
         }
     }
-    
+
     interface ParticipantData {
         assists: number,
         baronKills: number,
@@ -146,7 +168,6 @@ export namespace RiotResponse {
         wardsPlaced: number,
         win: boolean
     }
-    
+
     type MatchIdsResponse = string[]
 }
-

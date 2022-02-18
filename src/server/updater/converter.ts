@@ -1,9 +1,10 @@
 import axios from 'axios'
+import { DataDragonResponse } from './riotResponses'
 
 /**
  * Convert Riot API constants to their respective string values
  */
- export class Converter {
+export class Converter {
     private static championMap: { [id: number]: string } = {}
     private static queueMap: { [id: number]: [string, string] } = {}
     private static initialized = false
@@ -13,19 +14,25 @@ import axios from 'axios'
      * the data that Riot provides on every conversion.
      */
     public static init = async () => {
-        // Get version
         const version: string = (await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')).data[0]
 
         // Construct an id-to-champion map for current version
-        const championData: { [key: string]: { key: string, name: string } } = (await axios.get(`http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)).data.data
-        for (const champion in championData) {
-            Converter.championMap[Number(championData[champion].key)] = championData[champion].name
+        const champResp = await axios.get(`http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
+        if (champResp.status !== 200) throw Error(`Could not get champion data: ${champResp.statusText}`)
+
+        const champData: DataDragonResponse.ChampionResponse = champResp.data
+        const realChampData = champData.data
+        for (const champion in realChampData) {
+            Converter.championMap[Number(realChampData[champion].key)] = realChampData[champion].name
         }
 
         // Construct an id-to-queue-and-map map
-        const queueData: any[] = (await axios.get('https://static.developer.riotgames.com/docs/lol/queues.json')).data
+        const queueResp = await axios.get('https://static.developer.riotgames.com/docs/lol/queues.json')
+        if (queueResp.status !== 200) throw Error(`Could not fetch queue data: ${queueResp.statusText}`)
+
+        const queueData: DataDragonResponse.QueueResponse = queueResp.data
         for (const queue of queueData) {
-            Converter.queueMap[queue.queueId] = [queue.description, queue.map]
+            Converter.queueMap[queue.queueId] = [queue.description || '', queue.map]
         }
 
         Converter.initialized = true
