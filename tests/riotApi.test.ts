@@ -30,7 +30,8 @@ describe('get puuid', () => {
                 profileIconId: 747,
                 revisionDate: 1644475010000,
                 summonerLevel: 441
-            }
+            },
+            status: 200
         })
 
         await expect(riotApi.getPuuid('Koehler Express')).resolves.toEqual('abcd1234')
@@ -38,7 +39,8 @@ describe('get puuid', () => {
 
     it('throws an error from error response', async () => {
         (axios.get as jest.Mock).mockResolvedValue({
-            data: errorResponse
+            data: errorResponse,
+            status: 400
         })
 
         await expect(riotApi.getPuuid('Koehler Express')).rejects.toThrow()
@@ -46,7 +48,8 @@ describe('get puuid', () => {
 
     it('throws an error from garbage response', async () => {
         (axios.get as jest.Mock).mockResolvedValue({
-            data: garbageResponse
+            data: garbageResponse,
+            status: 29830
         })
 
         await expect(riotApi.getPuuid('Koehler Express')).rejects.toThrow()

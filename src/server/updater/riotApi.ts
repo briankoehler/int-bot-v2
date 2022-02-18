@@ -26,11 +26,12 @@ export class RiotApi {
      * @returns PUUID of summoner
      */
     getPuuid = async (summonerName: string) => {
-        const data = (await this.getWithToken(`https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`)).data
+        const resp = await this.getWithToken(`https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`)
+        const data = resp.data
 
         if (isSummonerResponse(data)) return data.puuid
         if (isErrorResponse(data)) throw Error(`Unable to get PUUID: ${data.status.message}`)
-
+        if (resp.status !== 200) throw Error(`Could not get summoner data: ${resp.statusText}`)
         throw Error(`Unable to get PUUID: ${this.defaultError}`)
     }
 
@@ -42,19 +43,21 @@ export class RiotApi {
      */
     getSummonerMatchIds = async (puuid: string, origin?: number) => {
         if (origin !== undefined) {
-            const data = (await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${origin}&start=0&count=100`)).data
+            const resp = await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${origin}&start=0&count=100`)
+            const data = resp.data
 
             if (isMatchIdsResponse(data)) return data
             if (isErrorResponse(data)) throw Error(`Unable to get match IDs: ${data.status.message}`)
-
+            if (resp.status !== 200) throw Error(`Could not get match IDs: ${resp.statusText}`)
             throw Error(`Unable to get match IDs: ${this.defaultError}`)
         }
 
-        const data = (await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=10`)).data
+        const resp = await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=10`)
+        const data = resp.data
 
         if (isMatchIdsResponse(data)) return data
         if (isErrorResponse(data)) throw Error(`Unable to get match IDs: ${data.status.message}`)
-
+        if (resp.status !== 200) throw Error(`Could not get match IDs: ${resp.statusText}`)
         throw Error(`Unable to get match IDs: ${this.defaultError}`)
     }
 
@@ -64,11 +67,12 @@ export class RiotApi {
      * @returns Data about match
      */
     getMatch = async (id: string) => {
-        const data = (await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/${id}`)).data
+        const resp = await this.getWithToken(`https://americas.api.riotgames.com/lol/match/v5/matches/${id}`)
+        const data = resp.data
 
         if (isMatchResponse(data)) return data
         if (isErrorResponse(data)) throw Error(`Unable to get match: ${data.status.message}`)
-
+        if (resp.status !== 200) throw Error(`Could not get match data: ${resp.statusText}`)
         throw Error(`Unable to get match: ${this.defaultError}`)
     }
 }
