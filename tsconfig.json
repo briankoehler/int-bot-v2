@@ -10,10 +10,11 @@
         "outDir": "build/",
         "rootDir": "src/",
         "strict": true,
-        "baseUrl": ".",
+        "baseUrl": "src",
         "paths": {
-            "@/*": ["src/*"]
-        }
+            "@/*": ["*"]
+        },
+        "sourceMap": true
     },
-    "include": ["src/**.ts"]
+    "include": ["src/**/*"]
 }

@@ -1,8 +1,7 @@
-import { config } from '@/config'
-import { RiotClient } from '@/riot/riotClient'
 import { Intents } from 'discord.js'
 import { Client } from 'discordx'
 import 'dotenv/config'
+import { config } from '../config'
 
 export const client = new Client({
     botId: 'int-bot-v2',
@@ -19,7 +18,6 @@ client.on('ready', async () => {
 
 const run = async () => {
     client.login(config.BOT_TOKEN)
-    const riotClient = new RiotClient(config.RIOT_TOKEN)
 }
 
 await run()
