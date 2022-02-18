@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { config } from '../src/config'
 import { RiotApi } from '../src/server/updater/riotApi'
-import { RiotResponse } from '../src/server/updater/riotResponses'
+import { RiotResponse } from '../src/server/updater/types'
 
 jest.mock('axios')
 

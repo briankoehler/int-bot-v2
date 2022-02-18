@@ -14,6 +14,7 @@ it('converts id successfully', async () => {
         status: 200
     }).mockResolvedValueOnce({
         data: {
+            type: 'champion',
             data: {
                 Aatrox: { key: 55, name: 'Aatrox' },
                 MasterYi: { key: 32, name: 'Master Yi' },
