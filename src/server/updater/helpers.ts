@@ -1,4 +1,16 @@
-import { RiotResponse } from './riotResponses'
+import { DataDragonResponse, RiotResponse } from './types'
+
+export const isChampionResponse = (response: any): response is DataDragonResponse.ChampionResponse => {
+    if (response.type !== 'champion') return false
+    if (response.data === undefined) return false
+    return true
+}
+
+export const isQueueResponse = (response: any): response is DataDragonResponse.QueueResponse => {
+    const properties = ['queueId', 'map', 'description']
+    if (!Array.isArray(response)) return false
+    return properties.every(p => p in response[0])
+}
 
 export const isSummonerResponse = (response: any): response is RiotResponse.SummonerResponse => {
     const properties = ['id', 'accountId', 'puuid', 'name', 'profileIconId', 'revisionDate', 'summonerLevel']

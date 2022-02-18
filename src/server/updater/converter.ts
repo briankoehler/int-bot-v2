@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { DataDragonResponse } from './riotResponses'
+import { isChampionResponse, isQueueResponse } from './helpers'
 
 /**
  * Convert Riot API constants to their respective string values
@@ -20,7 +20,9 @@ export class Converter {
         const champResp = await axios.get(`http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
         if (champResp.status !== 200) throw Error(`Could not get champion data: ${champResp.statusText}`)
 
-        const champData: DataDragonResponse.ChampionResponse = champResp.data
+        const champData = champResp.data
+        if (!isChampionResponse(champData)) throw Error(`Invalid champion response: ${JSON.stringify(champData)}`)
+
         const realChampData = champData.data
         for (const champion in realChampData) {
             Converter.championMap[Number(realChampData[champion].key)] = realChampData[champion].name
@@ -30,7 +32,9 @@ export class Converter {
         const queueResp = await axios.get('https://static.developer.riotgames.com/docs/lol/queues.json')
         if (queueResp.status !== 200) throw Error(`Could not fetch queue data: ${queueResp.statusText}`)
 
-        const queueData: DataDragonResponse.QueueResponse = queueResp.data
+        const queueData = queueResp.data
+        if (!isQueueResponse(queueData)) throw Error(`Invalid queue response: ${JSON.stringify(queueData)}`)
+
         for (const queue of queueData) {
             Converter.queueMap[queue.queueId] = [queue.description || '', queue.map]
         }
