@@ -7,7 +7,9 @@ import { config } from '../config'
 const rest = new REST({ version: '9' }).setToken(config.BOT_TOKEN)
 
 const body = [
-    new SlashCommandBuilder().setName('here').setDescription('Sets the notification channel for this guild.')
+    new SlashCommandBuilder()
+        .setName('here')
+        .setDescription('Sets the notification channel for this guild.'),
 ].map(command => command.toJSON())
 
 await rest.put(Routes.applicationCommands(config.CLIENT_ID), { body })

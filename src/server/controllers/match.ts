@@ -15,7 +15,7 @@ match.delete('/all', async (req, res) => {
 
 match.delete('/:matchId', async (req, res) => {
     await prisma.instance.match.delete({
-        where: { matchId: req.params.matchId }
+        where: { matchId: req.params.matchId },
     })
     res.status(200).send()
 })

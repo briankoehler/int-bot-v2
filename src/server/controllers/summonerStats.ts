@@ -15,7 +15,7 @@ summonerStats.delete('/all', async (req, res) => {
 
 summonerStats.delete('/:id', async (req, res) => {
     await prisma.instance.summonerStats.delete({
-        where: { id: req.params.id }
+        where: { id: req.params.id },
     })
     res.status(200).send()
 })

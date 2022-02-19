@@ -1,12 +1,13 @@
 import pkg from '@prisma/client'
 import { Client, Intents } from 'discord.js'
 import 'dotenv/config'
+import 'module-alias/register'
 import postgres from 'pg'
 import { config } from '../config'
 
 // Discord client
 export const client = new Client({
-    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
 })
 
 // Prisma client
@@ -16,7 +17,7 @@ export const prisma = new PrismaClient()
 // Postgres client
 const pg = new postgres.Client({
     connectionString: config.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
 })
 await pg.connect()
 

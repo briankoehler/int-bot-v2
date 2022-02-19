@@ -11,8 +11,8 @@ summoner.get('/all', async (req, res) => {
 summoner.get('/:puuid', async (req, res) => {
     const first = await prisma.instance.summoner.findFirst({
         where: {
-            puuid: req.params.puuid
-        }
+            puuid: req.params.puuid,
+        },
     })
     if (first === null) {
         res.sendStatus(404)
@@ -25,8 +25,8 @@ summoner.post('/', async (req, res) => {
     await prisma.instance.summoner.create({
         data: {
             puuid: req.body.puuid,
-            name: req.body.name
-        }
+            name: req.body.name,
+        },
     })
     res.status(201).send()
 })
@@ -34,8 +34,8 @@ summoner.post('/', async (req, res) => {
 summoner.delete('/:puuid', async (req, res) => {
     await prisma.instance.summoner.delete({
         where: {
-            puuid: req.params.puuid
-        }
+            puuid: req.params.puuid,
+        },
     })
     res.status(200).send()
 })
