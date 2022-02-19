@@ -1,14 +1,10 @@
-import pkg from '@prisma/client'
 import express from 'express'
 import schedule from 'node-schedule'
+import prisma from '../db/dbClient'
 import { match } from './controllers/match'
 import { summoner } from './controllers/summoner'
 import { summonerStats } from './controllers/summonerStats'
 import { Updater } from './updater/updater'
-
-const { PrismaClient } = pkg
-export const prisma = new PrismaClient()
-const updater = new Updater()
 
 const app = express()
 app.use(express.json())
@@ -18,7 +14,7 @@ app.use('/match', match)
 
 // Schedule data collection job
 schedule.scheduleJob('*/5 * * * *', async () => {
-    await updater.update()
+    await Updater.update()
 })
 
 const server = app.listen(3000, () => {
@@ -26,6 +22,6 @@ const server = app.listen(3000, () => {
 })
 
 process.on('SIGTERM', () => {
-    prisma.$disconnect()
+    prisma.instance.$disconnect()
     server.close(() => console.log('Server closed.'))
 })

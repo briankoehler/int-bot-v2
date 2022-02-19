@@ -1,15 +1,15 @@
 import express from 'express'
-import { prisma } from '../server'
+import prisma from '../../db/dbClient'
 
 export const summoner = express.Router()
 
 summoner.get('/all', async (req, res) => {
-    const all = await prisma.summoner.findMany()
+    const all = await prisma.instance.summoner.findMany()
     res.status(200).send(all)
 })
 
 summoner.get('/:puuid', async (req, res) => {
-    const first = await prisma.summoner.findFirst({
+    const first = await prisma.instance.summoner.findFirst({
         where: {
             puuid: req.params.puuid
         }
@@ -22,7 +22,7 @@ summoner.get('/:puuid', async (req, res) => {
 })
 
 summoner.post('/', async (req, res) => {
-    await prisma.summoner.create({
+    await prisma.instance.summoner.create({
         data: {
             puuid: req.body.puuid,
             name: req.body.name
@@ -32,7 +32,7 @@ summoner.post('/', async (req, res) => {
 })
 
 summoner.delete('/:puuid', async (req, res) => {
-    await prisma.summoner.delete({
+    await prisma.instance.summoner.delete({
         where: {
             puuid: req.params.puuid
         }

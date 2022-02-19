@@ -4,7 +4,7 @@ import { isChampionResponse, isQueueResponse } from './helpers'
 /**
  * Convert Riot API constants to their respective string values
  */
-export class Converter {
+export abstract class Converter {
     private static championMap: { [id: number]: string } = {}
     private static queueMap: { [id: number]: [string, string] } = {}
     private static initialized = false
