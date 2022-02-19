@@ -19,7 +19,8 @@ enum Team {
 model Guild {
   id                String              @id
   name              String
-  channelId         String              @map("channel_id")
+  channelId         String?             @map("channel_id")
+  active            Boolean             @default(true)
   following         GuildFollowing[]
   @@map("guild")
 }

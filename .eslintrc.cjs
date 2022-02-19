@@ -18,7 +18,7 @@ module.exports = {
     'rules': {
         'indent': ['error', 4, { 'SwitchCase': 1 }],
         'linebreak-style': ['error', 'unix'],
-        'quotes': ['error', 'single'],
+        'quotes': ['error', 'single', { 'avoidEscape': true }],
         'semi': ['error', 'never'],
         '@typescript-eslint/no-unused-vars': 'error',
         '@typescript-eslint/no-namespace': 0

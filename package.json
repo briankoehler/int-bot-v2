@@ -7,7 +7,7 @@
         "build": "tsc",
         "dev": "npm run server && npm run bot",
         "server": "npm run build && node --experimental-specifier-resolution=node build/server/server.js",
-        "bot": "npm run build && node --experimental-specifier-resolution=node build/bot/index.js",
+        "bot": "npm run build && node --experimental-specifier-resolution=node build/bot/bot.js",
         "test": "jest --watchAll",
         "lint": "eslint --ext .js,.ts .",
         "format": "prettier --write \"**/*.+(js|ts|json)\"",

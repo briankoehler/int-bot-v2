@@ -1,6 +1,7 @@
 import express from 'express'
 import schedule from 'node-schedule'
 import prisma from '../db/dbClient'
+import { guild } from './controllers/guild'
 import { match } from './controllers/match'
 import { summoner } from './controllers/summoner'
 import { summonerStats } from './controllers/summonerStats'
@@ -11,6 +12,7 @@ app.use(express.json())
 app.use('/summoner', summoner)
 app.use('/summonerstats', summonerStats)
 app.use('/match', match)
+app.use('/guild', guild)
 
 // Schedule data collection job
 schedule.scheduleJob('*/5 * * * *', async () => {
