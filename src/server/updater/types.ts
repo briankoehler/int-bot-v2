@@ -54,11 +54,12 @@ export namespace RiotResponse {
             gameType: string,
             gameVersion: string,
             mapId: number,
+            queueId: number,
             participants: ParticipantData[]
         }
     }
 
-    interface ParticipantData {
+    export interface ParticipantData {
         assists: number,
         baronKills: number,
         bountyLevel: number,

@@ -2,6 +2,7 @@ import { config } from '../../config'
 import prisma from '../../db/dbClient'
 import { Converter } from './converter'
 import { RiotApi } from './riotApi'
+import { RiotResponse } from './types'
 
 export abstract class Updater {
     private static riot = new RiotApi(config.RIOT_TOKEN)
@@ -76,7 +77,7 @@ export abstract class Updater {
      * Get expected match data from an API response.
      * @param data Match response data from Riot API
      */
-    private static parseAndInsertMatch = async (data: any) => {
+    private static parseAndInsertMatch = async (data: RiotResponse.MatchResponse) => {
         try {
             const [queue, map] = await Converter.convertQueueIdToNameAndMap(data.info.queueId)
             await prisma.instance.match.create({
@@ -87,7 +88,7 @@ export abstract class Updater {
                     queue,
                     map,
                     version: data.info.gameVersion,
-                    winningTeam: data.info.participants.win ? 'BLUE' : 'RED'
+                    winningTeam: data.info.participants[0].win ? 'BLUE' : 'RED'
                 }
             })
         }
@@ -101,7 +102,7 @@ export abstract class Updater {
      * @param summonersData Participants data from Riot API.
      * @param matchId The match that the data corresponds to.
      */
-    private static parseAndInsertSummonerStats = async (summonersData: any[], matchId: string) => {
+    private static parseAndInsertSummonerStats = async (summonersData: RiotResponse.ParticipantData[], matchId: string) => {
         for (const data of summonersData) {
             try {
                 // Determine if summoner is followed
