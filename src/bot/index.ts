@@ -1,17 +1,12 @@
 import pkg from '@prisma/client'
-import { Intents } from 'discord.js'
-import { Client } from 'discordx'
+import { Client, Intents } from 'discord.js'
 import 'dotenv/config'
 import postgres from 'pg'
 import { config } from '../config'
 
 // Discord client
 export const client = new Client({
-    botId: 'int-bot-v2',
-    intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES
-    ]
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
 })
 
 // Prisma client
@@ -25,16 +20,23 @@ const pg = new postgres.Client({
 })
 await pg.connect()
 
-// Event handlers
-client.on('ready', async () => {
-    await client.initApplicationCommands()
-    await client.initApplicationPermissions()
-})
-
-pg.on('notification', async (data) => {
+pg.on('notification', async data => {
     const payload = data.payload
     if (payload === undefined) return
     console.log('received notification', JSON.parse(payload))
+})
+
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return
+    const { commandName } = interaction
+
+    switch (commandName) {
+        case 'here':
+            await interaction.reply(`message received at channel ${interaction.channelId}.`)
+            break
+        default:
+            console.log('Unrecognized command.')
+    }
 })
 
 // Main function
