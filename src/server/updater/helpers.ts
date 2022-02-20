@@ -1,8 +1,5 @@
+import { isObject } from '../../common/helpers'
 import { DataDragonResponse, RiotResponse } from './types'
-
-export const isObject = (x: unknown): x is Record<string, unknown> => {
-    return typeof x === 'object' && x !== null
-}
 
 export const isChampionResponse = (
     response: unknown
@@ -32,7 +29,7 @@ export const isSummonerResponse = (
         'name',
         'profileIconId',
         'revisionDate',
-        'summonerLevel',
+        'summonerLevel'
     ]
     return properties.every(p => p in response)
 }
@@ -70,7 +67,7 @@ export const isMatchResponse = (response: unknown): response is RiotResponse.Mat
         'gameVersion',
         'mapId',
         'participants',
-        'queueId',
+        'queueId'
     ]
     return properties.every(p => isObject(response.info) && p in response.info)
 }

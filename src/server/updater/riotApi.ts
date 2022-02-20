@@ -19,7 +19,7 @@ export class RiotApi {
      */
     private getWithToken = async (endpoint: string) => {
         return await axios.get(endpoint, {
-            headers: { 'X-RIOT-TOKEN': this.riotToken },
+            headers: { 'X-RIOT-TOKEN': this.riotToken }
         })
     }
 
