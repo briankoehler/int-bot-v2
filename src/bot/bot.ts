@@ -2,9 +2,8 @@ import { Intents } from 'discord.js'
 import 'dotenv/config'
 import postgres from 'pg'
 import { config } from '../config'
-import prisma from '../db/dbClient'
 import { BotBuilder } from './botBuilder'
-import { isSummonerStats } from './helpers'
+import { NotificationHandler } from './notificationHandler'
 
 // Postgres client
 const pg = new postgres.Client({
@@ -25,51 +24,13 @@ const run = async () => {
     client.login(config.BOT_TOKEN)
     console.log('Bot is running.')
 
-    pg.on('notification', async data => {
+    const notificationHandler = new NotificationHandler(client)
+
+    pg.on('notification', async (data: postgres.Notification) => {
         const payload = data.payload
         if (payload === undefined) return
 
-        const stats = JSON.parse(payload)
-        if (!isSummonerStats(stats)) {
-            console.error('Unable to parse notification payload: ', stats)
-            return
-        }
-
-        // const guilds = (
-        //     await prisma.instance.guildFollowing.findMany({
-        //         where: {
-        //             puuid: stats.puuid
-        //         },
-        //         select: {
-        //             guild: true
-        //         }
-        //     })
-        // ).map(g => g.guild)
-        const guilds = await prisma.instance.guild.findMany()
-
-        const name = (
-            await prisma.instance.summoner.findFirst({
-                where: {
-                    puuid: stats.puuid
-                },
-                select: {
-                    name: true
-                }
-            })
-        )?.name
-
-        if (name === undefined) {
-            console.error(`Could not find anme for ${stats.puuid}.`)
-            return
-        }
-
-        guilds.forEach(async guild => {
-            if (guild.channelId === null) return
-
-            const channel = client.channels.cache.get(guild.channelId)
-            if (channel === undefined || channel.type !== 'GUILD_TEXT') return
-            await channel.send(`Big int by ${name} with ${stats.deaths} deaths.`)
-        })
+        await notificationHandler.handle(payload)
     })
 
     pg.query('LISTEN new_stats_event')
