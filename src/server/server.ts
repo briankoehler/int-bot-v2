@@ -1,5 +1,4 @@
 import express from 'express'
-import schedule from 'node-schedule'
 import prisma from '../db/dbClient'
 import { guild } from './controllers/guild'
 import { match } from './controllers/match'
@@ -15,9 +14,9 @@ app.use('/match', match)
 app.use('/guild', guild)
 
 // Schedule data collection job
-schedule.scheduleJob('*/5 * * * *', async () => {
-    await Updater.update()
-})
+// schedule.scheduleJob('*/5 * * * *', async () => {
+await Updater.update()
+// })
 
 const server = app.listen(3000, () => {
     console.log('Server listening on port 3000.')
