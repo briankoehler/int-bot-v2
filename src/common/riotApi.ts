@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { config } from '../../config'
+import { config } from '../config'
 import { isErrorResponse, isMatchIdsResponse, isMatchResponse, isSummonerResponse } from './helpers'
 
 export class RiotApi {

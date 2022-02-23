@@ -14,10 +14,13 @@ const commandFiles = fs
     .readdirSync(`${dirname(fileURLToPath(import.meta.url))}/commands`)
     .filter(f => f.endsWith('.js'))
 
-commandFiles.forEach(async file => {
-    const command = await import(`./commands/${file}`)
+for (const file of commandFiles) {
+    const { command } = await import(`./commands/${file}`)
     if (!isCommand(command)) throw Error(`Command file not parsable: ${file}`)
+    console.log(command.data.toJSON())
     commands.push(command.data.toJSON())
-})
+}
 
 await rest.put(Routes.applicationCommands(config.CLIENT_ID), { body: commands })
+
+console.log(await rest.get(Routes.applicationCommands(config.CLIENT_ID)))

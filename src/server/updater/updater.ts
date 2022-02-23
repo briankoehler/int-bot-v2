@@ -1,8 +1,8 @@
+import { RiotApi } from '../../common/riotApi'
+import { RiotResponse } from '../../common/types'
 import { config } from '../../config'
 import prisma from '../../db/dbClient'
 import { Converter } from './converter'
-import { RiotApi } from './riotApi'
-import { RiotResponse } from './types'
 
 export abstract class Updater {
     private static riot = new RiotApi(config.RIOT_TOKEN)
