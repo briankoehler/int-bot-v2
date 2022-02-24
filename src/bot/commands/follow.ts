@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
-import { CacheType, CommandInteraction } from 'discord.js'
+import { CommandInteraction } from 'discord.js'
 import { RiotApi } from '../../common/riotApi'
 import { config } from '../../config'
 import prisma from '../../db/dbClient'
@@ -8,13 +8,13 @@ import { Command } from '../types'
 const follow: Command = {
     data: new SlashCommandBuilder()
         .setName('follow')
-        .setDescription("Follow a summoner.").addStringOption(option =>
-            option.setName('name')
-                .setDescription('The summoner to follow.')
-                .setRequired(true)),
+        .setDescription('Follow a summoner.')
+        .addStringOption(option =>
+            option.setName('name').setDescription('The summoner to follow.').setRequired(true)
+        ),
     guildOnly: true,
 
-    execute: async (interaction: CommandInteraction<CacheType>) => {
+    execute: async (interaction: CommandInteraction) => {
         if (interaction.guildId === null || interaction.guild === null) {
             await interaction.reply('Command must be used in a guild.')
             return
@@ -37,8 +37,7 @@ const follow: Command = {
                 where: { name },
                 select: { puuid: true }
             })
-        }
-        catch (e) {
+        } catch (e) {
             console.error('An error occurred when checking for summoner PUUID in database: ', e)
             return
         }
@@ -57,13 +56,11 @@ const follow: Command = {
                     await interaction.reply('Summoner already followed.')
                     return
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 console.error('Error checking if summoner is already followed: ', e)
                 return
             }
-        }
-        else {
+        } else {
             // If summoner is not in database, get PUUID from Riot API
             const riot = new RiotApi(config.RIOT_TOKEN)
             puuid = await riot.getPuuid(name)
@@ -72,8 +69,7 @@ const follow: Command = {
                 await prisma.instance.summoner.create({
                     data: { name, puuid }
                 })
-            }
-            catch (e) {
+            } catch (e) {
                 console.error('Error creating summoner in database: ', e)
             }
 
@@ -85,8 +81,7 @@ const follow: Command = {
                         puuid: puuid
                     }
                 })
-            }
-            catch (e) {
+            } catch (e) {
                 console.error('Error adding following to database: ', e)
                 return
             }
@@ -97,4 +92,3 @@ const follow: Command = {
 }
 
 export { follow as command }
-
