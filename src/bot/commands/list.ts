@@ -26,7 +26,7 @@ const list: Command = {
         }
 
         await interaction.reply(
-            `\n${Formatters.bold('Followed Summoners:')}\n${summoners.join('\n')}`
+            `${Formatters.bold('Followed Summoners:')}\n${(summoners.map(s => s.name)).join('\n')}`
         )
     }
 }
