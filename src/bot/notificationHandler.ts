@@ -101,7 +101,7 @@ export class NotificationHandler {
      * @returns Whether the scoreline is an "int"
      */
     private isInt = (kills: number, deaths: number, assists: number) => {
-        if (kills * 2 + assists / (deaths * 2) < 1.3 && deaths - kills > 2 && deaths > 3) {
+        if ((kills * 2 + assists) / (deaths * 2) < 1.3 && deaths - kills > 2 && deaths > 3) {
             if (deaths < 6 && kills + assists > 3) return false
             if (deaths < 10 && kills > 2 && kills + assists > 7) return false
             return true

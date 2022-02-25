@@ -49,7 +49,7 @@ export class RiotApi {
     getSummonerMatchIds = async (puuid: string, origin?: number) => {
         if (origin !== undefined) {
             const resp = await this.getWithToken(
-                `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${origin}&start=0&count=100`
+                `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${origin}&start=0&count=5`
             )
             const data = resp.data
 
@@ -61,7 +61,7 @@ export class RiotApi {
         }
 
         const resp = await this.getWithToken(
-            `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=10`
+            `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5`
         )
         const data = resp.data
 
