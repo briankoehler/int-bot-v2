@@ -13,14 +13,22 @@ export class RiotApi {
     }
 
     /**
-     * Query Riot API using the established token.
+     * Query Riot API using the established token. Prevent rate limiting errors by waiting
+     * specified amount of time.
      * @param endpoint Riot API endpoint
      * @returns Riot API response
      */
     private getWithToken = async (endpoint: string) => {
-        return await axios.get(endpoint, {
+        const resp = await axios.get(endpoint, {
             headers: { 'X-RIOT-TOKEN': this.riotToken }
         })
+        if (resp.status === 429) {
+            const time = Number(resp.headers['Retry-After'])
+            setTimeout(() => {
+                return this.getWithToken(endpoint)
+            }, time * 1000)
+        }
+        return resp
     }
 
     /**
