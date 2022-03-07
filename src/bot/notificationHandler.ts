@@ -1,5 +1,7 @@
-import { Guild } from '@prisma/client'
+import { Guild, Summoner } from '@prisma/client'
 import { Client } from 'discord.js'
+import { performSafePrismaOperation } from '../common/helpers'
+import { Result } from '../common/types/errors'
 import prisma from '../db/dbClient'
 import { isSummonerStats } from './helpers'
 
@@ -49,14 +51,16 @@ export class NotificationHandler {
      * @param puuid Summoner puuid
      * @returns Summoner data
      */
-    private getSummoner = async (puuid: string) => {
-        try {
-            return await prisma.instance.summoner.findFirst({
-                where: { puuid }
-            })
-        } catch (e) {
-            console.error('Unable to find PUUID: ', puuid)
-        }
+    private getSummoner = async (puuid: string): Promise<Result<Summoner>> => {
+        const op = await performSafePrismaOperation(async () => {
+            return await prisma.instance.summoner.findFirst({ where: { puuid } })
+        })
+
+        if (!op.ok) return op
+
+        if (op.value === null)
+            return { ok: false, value: Error(`Unable to find summoner: ${puuid}`) }
+        return { ok: true, value: op.value }
     }
 
     /**
@@ -65,18 +69,19 @@ export class NotificationHandler {
      * @returns Followers for the given summoner
      */
     private getFollowers = async (puuid: string) => {
-        try {
-            return (
-                await prisma.instance.guildFollowing.findMany({
-                    where: { puuid },
-                    select: {
-                        guild: true
-                    }
-                })
-            ).map(g => g.guild)
-        } catch (e) {
-            console.error('Unable to find followers of ', puuid)
+        const op = await performSafePrismaOperation(async () => {
+            return await prisma.instance.guildFollowing.findMany({
+                where: { puuid },
+                select: { guild: true }
+            })
+        })
+
+        if (!op.ok) {
+            console.error(op.value)
+            return
         }
+
+        return op.value.map(g => g.guild)
     }
 
     /**

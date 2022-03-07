@@ -1,4 +1,5 @@
 import { Guild } from 'discord.js'
+import { performSafePrismaOperation } from '../../common/helpers'
 import prisma from '../../db/dbClient'
 import { Event } from '../types'
 
@@ -7,16 +8,17 @@ const guildCreate: Event = {
     once: false,
 
     execute: async (guild: unknown) => {
-        if (!(guild instanceof Guild)) throw Error('Expected guild to be of type Guild.')
+        if (!(guild instanceof Guild))
+            return { ok: false, value: Error('Event must be called with a guild.') }
 
         const { id, name } = guild
-        try {
-            await prisma.instance.guild.create({
-                data: { id, name }
-            })
-        } catch (e) {
-            console.error('An error occurred when joining a guild: ', e)
-        }
+
+        const result = await performSafePrismaOperation(async () => {
+            return await prisma.instance.guild.create({ data: { id, name } })
+        }, 'An error occurred when creating guild in database')
+
+        if (!result.ok) return result
+        return { ok: true, value: null }
     }
 }
 

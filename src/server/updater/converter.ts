@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { isChampionResponse, isQueueResponse } from '../../common/helpers'
+import { isChampionResponse, isQueueResponse } from '../../common/types/dataDragon'
 
 /**
  * Convert Riot API constants to their respective string values

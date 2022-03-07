@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
 import { CommandInteraction } from 'discord.js'
+import { performSafePrismaOperation } from '../../common/helpers'
 import prisma from '../../db/dbClient'
 import { Command } from '../types'
 
@@ -15,15 +16,16 @@ const unfollow: Command = {
     execute: async (interaction: CommandInteraction) => {
         if (!interaction.inGuild()) {
             await interaction.reply('Command must be used in a guild.')
-            return
+            return { ok: false, value: Error('Command must be used in a guild.') }
         }
+        const guildId = interaction.guildId
 
         const name = interaction.options.getString('name')
 
         // Check that name was specified
         if (name === null) {
             await interaction.reply('Summoner name not specified.')
-            return
+            return { ok: false, value: Error('Summoner name not specified.') }
         }
 
         const testCount = await prisma.instance.guildFollowing.count({
@@ -35,17 +37,19 @@ const unfollow: Command = {
 
         if (testCount === 0) {
             await interaction.reply('Summoner not followed.')
-            return
+            return { ok: false, value: Error('Summoner not followed.') }
         }
 
-        await prisma.instance.guildFollowing.deleteMany({
-            where: {
-                guildId: interaction.guildId,
-                summoner: { name }
-            }
+        const deleteOp = await performSafePrismaOperation(async () => {
+            return await prisma.instance.guildFollowing.deleteMany({
+                where: { guildId, summoner: { name } }
+            })
         })
 
+        if (!deleteOp.ok) return deleteOp
+
         await interaction.reply('Summoner unfollowed.')
+        return { ok: true, value: null }
     }
 }
 

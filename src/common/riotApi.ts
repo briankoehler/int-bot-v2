@@ -1,6 +1,11 @@
 import axios from 'axios'
 import { config } from '../config'
-import { isErrorResponse, isMatchIdsResponse, isMatchResponse, isSummonerResponse } from './helpers'
+import {
+    isErrorResponse,
+    isMatchIdsResponse,
+    isMatchResponse,
+    isSummonerResponse
+} from './types/riotResponse'
 
 export class RiotApi {
     private riotToken: string
@@ -32,21 +37,39 @@ export class RiotApi {
     }
 
     /**
+     * Query Riot API and handle errors.
+     * @param endpoint Riot API endpoint
+     * @param isResponse Type guard to check if response is of expected type
+     * @returns Result with either value or error
+     */
+    private getData = async (endpoint: string, isResponse: (arg0: unknown) => unknown) => {
+        // Query Riot API
+        const resp = await this.getWithToken(endpoint)
+        const data = resp.data
+
+        // Handle errors
+        if (resp.status !== 200) {
+            if (isErrorResponse(data)) return { ok: false, value: Error(resp.statusText) }
+            return { ok: false, value: Error(resp.statusText) }
+        }
+
+        // Handle success
+        if (isResponse(data)) return { ok: true, value: data }
+
+        // Handle unexpected response
+        return { ok: false, value: Error(this.defaultError) }
+    }
+
+    /**
      * Queries Riot API for summoner PUUID.
      * @param summonerName Summoner name to query by
      * @returns PUUID of summoner
      */
-    getPuuid = async (summonerName: string) => {
-        const resp = await this.getWithToken(
-            `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`
+    getSummoner = async (summonerName: string) =>
+        this.getData(
+            `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`,
+            isSummonerResponse
         )
-        const data = resp.data
-
-        if (isSummonerResponse(data)) return data.puuid
-        if (isErrorResponse(data)) throw Error(`Unable to get PUUID: ${data.status.message}`)
-        if (resp.status !== 200) throw Error(`Could not get summoner data: ${resp.statusText}`)
-        throw Error(`Unable to get PUUID: ${this.defaultError}`)
-    }
 
     /**
      * Queries Riot API for summoner recent matches.
@@ -54,45 +77,22 @@ export class RiotApi {
      * @param origin An optional start time to get matches from
      * @returns Array of match IDs
      */
-    getSummonerMatchIds = async (puuid: string, origin?: number) => {
-        if (origin !== undefined) {
-            const resp = await this.getWithToken(
-                `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${origin}&start=0&count=5`
-            )
-            const data = resp.data
-
-            if (isMatchIdsResponse(data)) return data
-            if (isErrorResponse(data))
-                throw Error(`Unable to get match IDs: ${data.status.message}`)
-            if (resp.status !== 200) throw Error(`Could not get match IDs: ${resp.statusText}`)
-            throw Error(`Unable to get match IDs: ${this.defaultError}`)
-        }
-
-        const resp = await this.getWithToken(
-            `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5`
+    getSummonerMatchIds = async (puuid: string, origin?: number) =>
+        this.getData(
+            `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5${
+                origin ? `&startTime=${origin}` : ''
+            }`,
+            isMatchIdsResponse
         )
-        const data = resp.data
-
-        if (isMatchIdsResponse(data)) return data
-        if (isErrorResponse(data)) throw Error(`Unable to get match IDs: ${data.status.message}`)
-        if (resp.status !== 200) throw Error(`Could not get match IDs: ${resp.statusText}`)
-        throw Error(`Unable to get match IDs: ${this.defaultError}`)
-    }
 
     /**
      * Queries Riot API for match data.
      * @param id Match ID to query
      * @returns Data about match
      */
-    getMatch = async (id: string) => {
-        const resp = await this.getWithToken(
-            `https://americas.api.riotgames.com/lol/match/v5/matches/${id}`
+    getMatch = async (id: string) =>
+        this.getData(
+            `https://americas.api.riotgames.com/lol/match/v5/matches/${id}`,
+            isMatchResponse
         )
-        const data = resp.data
-
-        if (isMatchResponse(data)) return data
-        if (isErrorResponse(data)) throw Error(`Unable to get match: ${data.status.message}`)
-        if (resp.status !== 200) throw Error(`Could not get match data: ${resp.statusText}`)
-        throw Error(`Unable to get match: ${this.defaultError}`)
-    }
 }
