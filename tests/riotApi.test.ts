@@ -16,12 +16,12 @@ const errorResponse: RiotResponse.ErrorResponse = {
 
 const garbageResponse = {
     message: 'wat???',
-    exception: 'wat?????????',
+    exception: 'wat?????????'
 }
 
 describe('get puuid', () => {
     it('returns abcd1234', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({
+        ;(axios.get as jest.Mock).mockResolvedValue({
             data: {
                 id: 'asdfre2b_dsfasdf',
                 accountId: 'asdfjklasasdfjasdlkf',
@@ -38,7 +38,7 @@ describe('get puuid', () => {
     })
 
     it('throws an error from error response', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({
+        ;(axios.get as jest.Mock).mockResolvedValue({
             data: errorResponse,
             status: 400
         })
@@ -47,7 +47,7 @@ describe('get puuid', () => {
     })
 
     it('throws an error from garbage response', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({
+        ;(axios.get as jest.Mock).mockResolvedValue({
             data: garbageResponse,
             status: 29830
         })
@@ -58,14 +58,16 @@ describe('get puuid', () => {
 
 describe('get match IDs', () => {
     it('returns 4 matches', async () => {
-        const data = ['abc', 'def', 'ghi', 'jkl'];
-        (axios.get as jest.Mock).mockResolvedValue({ data })
+        const data = ['abc', 'def', 'ghi', 'jkl']
+        ;(axios.get as jest.Mock).mockResolvedValue({
+            data
+        })
 
         await expect(riotApi.getSummonerMatchIds('asdfasd')).resolves.toEqual(data)
     })
 
     it('throws an error from error response', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({
+        ;(axios.get as jest.Mock).mockResolvedValue({
             data: errorResponse
         })
 
@@ -73,7 +75,7 @@ describe('get match IDs', () => {
     })
 
     it('throws an error from garbage response', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({
+        ;(axios.get as jest.Mock).mockResolvedValue({
             data: garbageResponse
         })
 
@@ -85,8 +87,8 @@ describe('get match data', () => {
     it('returns 4 matches', async () => {
         const data: RiotResponse.MatchResponse = {
             metadata: {
-                'matchId': 'abc',
-                participants: ['abc', 'def', 'ghi', 'jkl'],
+                matchId: 'abc',
+                participants: ['abc', 'def', 'ghi', 'jkl']
             },
             info: {
                 gameCreation: 123985,
@@ -98,16 +100,17 @@ describe('get match data', () => {
                 gameType: 'rift baby',
                 gameVersion: '12.9.1',
                 mapId: 0,
-                participants: []
+                participants: [],
+                queueId: 99
             }
-        };
-        (axios.get as jest.Mock).mockResolvedValue({ data })
+        }
+        ;(axios.get as jest.Mock).mockResolvedValue({ data })
 
         await expect(riotApi.getMatch('asdfasd')).resolves.toEqual(data)
     })
 
     it('throws an error from error response', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({
+        ;(axios.get as jest.Mock).mockResolvedValue({
             data: errorResponse
         })
 
@@ -115,7 +118,7 @@ describe('get match data', () => {
     })
 
     it('throws an error from garbage response', async () => {
-        (axios.get as jest.Mock).mockResolvedValue({
+        ;(axios.get as jest.Mock).mockResolvedValue({
             data: garbageResponse
         })
 

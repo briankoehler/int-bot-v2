@@ -1,7 +1,10 @@
+import { performSafePrismaOperation } from '../../common/helpers'
+import { RiotApi } from '../../common/riotApi'
+import { handleResult, Result } from '../../common/types/errors'
+import { MatchResponse, ParticipantData } from '../../common/types/riotResponse'
 import { config } from '../../config'
 import prisma from '../../db/dbClient'
 import { Converter } from './converter'
-import { RiotApi } from './riotApi'
 
 export abstract class Updater {
     private static riot = new RiotApi(config.RIOT_TOKEN)
@@ -13,11 +16,15 @@ export abstract class Updater {
         const puuids = await Updater.getPuuids()
         const newMatches = await Updater.getMatchIds(puuids)
         await Converter.init()
-        
+
         newMatches.forEach(async matchId => {
-            const data = await Updater.riot.getMatch(matchId)
-            await Updater.parseAndInsertMatch(data)
-            await Updater.parseAndInsertSummonerStats(data.info.participants, matchId)
+            try {
+                const data = handleResult(await Updater.riot.getMatch(matchId))
+                handleResult(await Updater.parseAndInsertMatch(data))
+                await Updater.parseAndInsertSummonerStats(data.info.participants, matchId)
+            } catch (e) {
+                console.error(`Error on match ${matchId}: `, e)
+            }
         })
     }
 
@@ -26,18 +33,16 @@ export abstract class Updater {
      * @returns Array of PUUIDs
      */
     private static getPuuids = async () => {
-        try {
-            const puuids = (await prisma.instance.summoner.findMany({
+        const summonersOp = await performSafePrismaOperation(async () => {
+            return await prisma.instance.summoner.findMany({
                 select: {
                     puuid: true
                 }
-            })).map(s => s.puuid)
-            return new Set(puuids)
-        }
-        catch (e) {
-            console.error('An error occurred when getting PUUIDS: ', e)
-            return new Set<string>()
-        }
+            })
+        })
+
+        if (!summonersOp.ok) return new Set<string>()
+        return new Set(summonersOp.value.map(summoner => summoner.puuid))
     }
 
     /**
@@ -47,28 +52,40 @@ export abstract class Updater {
      */
     private static getMatchIds = async (puuids: Set<string>) => {
         const newMatches: Set<string> = new Set()
+
         for (const puuid of puuids) {
-            try {
-                // Get latest timestamp of summoner from db
-                const timestamps = (await prisma.instance.summonerStats.findMany({
+            // Get latest timestamp of summoner from db
+            const timestampsOp = await performSafePrismaOperation(async () => {
+                return await prisma.instance.summonerStats.findMany({
                     where: { puuid },
                     select: {
                         match: true
                     }
-                })).map(m => Math.round(m.match.startTime.getTime() / 1000) + m.match.duration + 120) // Buffer of 120 seconds
+                })
+            })
 
-                // Get latest match ID from Riot API
-                let matchIds: string[]
-                if (timestamps.length > 0) matchIds = await Updater.riot.getSummonerMatchIds(puuid, Math.max(...timestamps))
-                else matchIds = await Updater.riot.getSummonerMatchIds(puuid)
+            if (!timestampsOp.ok) {
+                console.error(timestampsOp.value)
+                continue
+            }
 
-                // Add new match IDs to set
-                matchIds.forEach(newMatches.add, newMatches)
-            }
-            catch (e) {
-                console.error('An error occurred when getting match IDs: ', e)
-            }
+            const timestamps = timestampsOp.value.map(
+                m => Math.round(m.match.startTime.getTime() / 1000) + m.match.duration + 120
+            ) // Buffer of 120 seconds
+
+            // Get latest match ID from Riot API
+            let matchIds: string[]
+            const result =
+                timestamps.length > 0
+                    ? await Updater.riot.getSummonerMatchIds(puuid, Math.max(...timestamps))
+                    : await Updater.riot.getSummonerMatchIds(puuid)
+            if (result.ok) matchIds = result.value
+            else continue
+
+            // Add new match IDs to set
+            matchIds.forEach(newMatches.add, newMatches)
         }
+
         return newMatches
     }
 
@@ -76,10 +93,11 @@ export abstract class Updater {
      * Get expected match data from an API response.
      * @param data Match response data from Riot API
      */
-    private static parseAndInsertMatch = async (data: any) => {
-        try {
-            const [queue, map] = await Converter.convertQueueIdToNameAndMap(data.info.queueId)
-            await prisma.instance.match.create({
+    private static parseAndInsertMatch = async (data: MatchResponse): Promise<Result<unknown>> => {
+        const [queue, map] = await Converter.convertQueueIdToNameAndMap(data.info.queueId)
+
+        const matchOp = await performSafePrismaOperation(async () => {
+            return await prisma.instance.match.create({
                 data: {
                     matchId: data.metadata.matchId,
                     startTime: new Date(data.info.gameStartTimestamp),
@@ -87,13 +105,14 @@ export abstract class Updater {
                     queue,
                     map,
                     version: data.info.gameVersion,
-                    winningTeam: data.info.participants.win ? 'BLUE' : 'RED'
+                    winningTeam: data.info.participants[0].win ? 'BLUE' : 'RED'
                 }
             })
-        }
-        catch (e) {
-            console.error('An error occurred.', e)
-        }
+        })
+
+        if (!matchOp.ok) return matchOp
+
+        return { ok: true, value: null }
     }
 
     /**
@@ -101,17 +120,23 @@ export abstract class Updater {
      * @param summonersData Participants data from Riot API.
      * @param matchId The match that the data corresponds to.
      */
-    private static parseAndInsertSummonerStats = async (summonersData: any[], matchId: string) => {
+    private static parseAndInsertSummonerStats = async (
+        summonersData: ParticipantData[],
+        matchId: string
+    ) => {
         for (const data of summonersData) {
-            try {
-                // Determine if summoner is followed
-                const puuid = data.puuid
-                const testCount = await prisma.instance.summoner.count({ where: { puuid } })
+            // Determine if summoner is followed
+            const puuid = data.puuid
+            const testCount = await prisma.instance.summoner.count({
+                where: { puuid }
+            })
 
-                if (testCount === 0) continue
+            if (testCount === 0) continue
 
-                const champion = await Converter.convertChampionIdToName(data.championId)
-                await prisma.instance.summonerStats.create({
+            const champion = await Converter.convertChampionIdToName(data.championId)
+
+            return await performSafePrismaOperation(async () => {
+                return await prisma.instance.summonerStats.create({
                     data: {
                         puuid,
                         matchId,
@@ -125,11 +150,7 @@ export abstract class Updater {
                         challenges: data.challenges
                     }
                 })
-            }
-            catch (e) {
-                console.error('An error occurred when parsing summoner stats: ', e)
-            }
+            })
         }
     }
 }
-

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { isChampionResponse, isQueueResponse } from './helpers'
+import { isChampionResponse, isQueueResponse } from '../../common/types/dataDragon'
 
 /**
  * Convert Riot API constants to their respective string values
@@ -14,26 +14,37 @@ export abstract class Converter {
      * the data that Riot provides on every conversion.
      */
     public static init = async () => {
-        const version: string = (await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')).data[0]
+        const version: string = (
+            await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')
+        ).data[0]
 
         // Construct an id-to-champion map for current version
-        const champResp = await axios.get(`http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
-        if (champResp.status !== 200) throw Error(`Could not get champion data: ${champResp.statusText}`)
+        const champResp = await axios.get(
+            `http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`
+        )
+        if (champResp.status !== 200)
+            throw Error(`Could not get champion data: ${champResp.statusText}`)
 
         const champData = champResp.data
-        if (!isChampionResponse(champData)) throw Error(`Invalid champion response: ${JSON.stringify(champData)}`)
+        if (!isChampionResponse(champData))
+            throw Error(`Invalid champion response: ${JSON.stringify(champData)}`)
 
         const realChampData = champData.data
         for (const champion in realChampData) {
-            Converter.championMap[Number(realChampData[champion].key)] = realChampData[champion].name
+            Converter.championMap[Number(realChampData[champion].key)] =
+                realChampData[champion].name
         }
 
         // Construct an id-to-queue-and-map map
-        const queueResp = await axios.get('https://static.developer.riotgames.com/docs/lol/queues.json')
-        if (queueResp.status !== 200) throw Error(`Could not fetch queue data: ${queueResp.statusText}`)
+        const queueResp = await axios.get(
+            'https://static.developer.riotgames.com/docs/lol/queues.json'
+        )
+        if (queueResp.status !== 200)
+            throw Error(`Could not fetch queue data: ${queueResp.statusText}`)
 
         const queueData = queueResp.data
-        if (!isQueueResponse(queueData)) throw Error(`Invalid queue response: ${JSON.stringify(queueData)}`)
+        if (!isQueueResponse(queueData))
+            throw Error(`Invalid queue response: ${JSON.stringify(queueData)}`)
 
         for (const queue of queueData) {
             Converter.queueMap[queue.queueId] = [queue.description || '', queue.map]
