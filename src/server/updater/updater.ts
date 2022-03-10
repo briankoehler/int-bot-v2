@@ -1,6 +1,6 @@
 import { performSafePrismaOperation } from '../../common/helpers'
 import { RiotApi } from '../../common/riotApi'
-import { handleResult, Result } from '../../common/types/errors'
+import { handleResult } from '../../common/types/errors'
 import { MatchResponse, ParticipantData } from '../../common/types/riotResponse'
 import { config } from '../../config'
 import prisma from '../../db/dbClient'
@@ -15,12 +15,17 @@ export abstract class Updater {
     static update = async () => {
         const puuids = await Updater.getPuuids()
         const newMatches = await Updater.getMatchIds(puuids)
-        await Converter.init()
+        const didInit = await Converter.init()
+
+        if (!didInit.ok) {
+            console.error('Error when initializing converter: ', didInit.value.message)
+            return
+        }
 
         newMatches.forEach(async matchId => {
             try {
                 const data = handleResult(await Updater.riot.getMatch(matchId))
-                handleResult(await Updater.parseAndInsertMatch(data))
+                await Updater.parseAndInsertMatch(data)
                 await Updater.parseAndInsertSummonerStats(data.info.participants, matchId)
             } catch (e) {
                 console.error(`Error on match ${matchId}: `, e)
@@ -93,8 +98,10 @@ export abstract class Updater {
      * Get expected match data from an API response.
      * @param data Match response data from Riot API
      */
-    private static parseAndInsertMatch = async (data: MatchResponse): Promise<Result<unknown>> => {
-        const [queue, map] = await Converter.convertQueueIdToNameAndMap(data.info.queueId)
+    private static parseAndInsertMatch = async (data: MatchResponse) => {
+        const [queue, map] = handleResult(
+            await Converter.convertQueueIdToNameAndMap(data.info.queueId)
+        )
 
         const matchOp = await performSafePrismaOperation(async () => {
             return await prisma.instance.match.create({
@@ -110,9 +117,7 @@ export abstract class Updater {
             })
         })
 
-        if (!matchOp.ok) return matchOp
-
-        return { ok: true, value: null }
+        if (!matchOp.ok) throw matchOp.value
     }
 
     /**
@@ -133,7 +138,7 @@ export abstract class Updater {
 
             if (testCount === 0) continue
 
-            const champion = await Converter.convertChampionIdToName(data.championId)
+            const champion = handleResult(await Converter.convertChampionIdToName(data.championId))
 
             return await performSafePrismaOperation(async () => {
                 return await prisma.instance.summonerStats.create({

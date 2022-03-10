@@ -30,7 +30,8 @@ const run = async () => {
         const payload = data.payload
         if (payload === undefined) return
 
-        await notificationHandler.handle(payload)
+        const handleResult = await notificationHandler.handle(payload)
+        if (!handleResult.ok) console.error(handleResult.value)
     })
 
     pg.query('LISTEN new_stats_event')

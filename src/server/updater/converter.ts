@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { isChampionResponse, isQueueResponse } from '../../common/types/dataDragon'
+import { Result } from '../../common/types/errors'
 
 /**
  * Convert Riot API constants to their respective string values
@@ -13,7 +14,7 @@ export abstract class Converter {
      * Construct the necessary maps to convert constants. This is done to avoid iterating
      * the data that Riot provides on every conversion.
      */
-    public static init = async () => {
+    public static init = async (): Promise<Result<null>> => {
         const version: string = (
             await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')
         ).data[0]
@@ -23,11 +24,17 @@ export abstract class Converter {
             `http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`
         )
         if (champResp.status !== 200)
-            throw Error(`Could not get champion data: ${champResp.statusText}`)
+            return {
+                ok: false,
+                value: Error(`Could not get champion data: ${champResp.statusText}`)
+            }
 
         const champData = champResp.data
         if (!isChampionResponse(champData))
-            throw Error(`Invalid champion response: ${JSON.stringify(champData)}`)
+            return {
+                ok: false,
+                value: Error(`Invalid champion response: ${JSON.stringify(champData)}`)
+            }
 
         const realChampData = champData.data
         for (const champion in realChampData) {
@@ -40,17 +47,24 @@ export abstract class Converter {
             'https://static.developer.riotgames.com/docs/lol/queues.json'
         )
         if (queueResp.status !== 200)
-            throw Error(`Could not fetch queue data: ${queueResp.statusText}`)
+            return {
+                ok: false,
+                value: Error(`Could not fetch queue data: ${queueResp.statusText}`)
+            }
 
         const queueData = queueResp.data
         if (!isQueueResponse(queueData))
-            throw Error(`Invalid queue response: ${JSON.stringify(queueData)}`)
+            return {
+                ok: false,
+                value: Error(`Invalid queue response: ${JSON.stringify(queueData)}`)
+            }
 
         for (const queue of queueData) {
             Converter.queueMap[queue.queueId] = [queue.description || '', queue.map]
         }
 
         Converter.initialized = true
+        return { ok: true, value: null }
     }
 
     /**
@@ -58,10 +72,11 @@ export abstract class Converter {
      * @param id Queue constant ID
      * @returns Both the name and map the match was in
      */
-    static convertQueueIdToNameAndMap = async (id: number): Promise<[string, string]> => {
-        Converter.checkInitialized()
-        if (Converter.queueMap[id] !== undefined) return Converter.queueMap[id]
-        throw Error(`Unable to parse queue ID: ${id}`)
+    static convertQueueIdToNameAndMap = async (id: number): Promise<Result<[string, string]>> => {
+        if (!Converter.initialized) return { ok: false, value: Error('Converter not initialized') }
+
+        if (Converter.queueMap[id] !== undefined) return { ok: true, value: Converter.queueMap[id] }
+        return { ok: false, value: Error(`Unable to parse queue ID: ${id}`) }
     }
 
     /**
@@ -69,13 +84,11 @@ export abstract class Converter {
      * @param id Champion constant ID
      * @returns Name of champion
      */
-    static convertChampionIdToName = async (id: number): Promise<string> => {
-        Converter.checkInitialized()
-        if (Converter.championMap[id] !== undefined) return Converter.championMap[id]
-        throw Error(`Unable to parse champion ID: ${id}`)
-    }
+    static convertChampionIdToName = async (id: number): Promise<Result<string>> => {
+        if (!Converter.initialized) return { ok: false, value: Error('Converter not initialized') }
 
-    private static checkInitialized = () => {
-        if (!Converter.initialized) throw Error('Converter not yet initialized.')
+        if (Converter.championMap[id] !== undefined)
+            return { ok: true, value: Converter.championMap[id] }
+        return { ok: false, value: Error(`Unable to parse champion ID: ${id}`) }
     }
 }

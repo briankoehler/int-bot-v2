@@ -1,4 +1,4 @@
-import { Guild, Summoner } from '@prisma/client'
+import { Guild, Summoner, SummonerStats } from '@prisma/client'
 import { Client } from 'discord.js'
 import { performSafePrismaOperation } from '../common/helpers'
 import { Result } from '../common/types/errors'
@@ -20,17 +20,20 @@ export class NotificationHandler {
      * Handle the notification (send necessary messages).
      * @param payload Payload from the Postgres notification
      */
-    handle = async (payload: string) => {
-        const stats = this.parsePayload(payload)
+    handle = async (payload: string): Promise<Result<null>> => {
+        const statsResult = this.parsePayload(payload)
+        if (!statsResult.ok) return statsResult
+        const stats = statsResult.value
 
-        if (!this.isInt(stats.kills, stats.deaths, stats.assists)) return
+        if (!this.isInt(stats.kills, stats.deaths, stats.assists)) return { ok: true, value: null }
 
         const summoner = await this.getSummoner(stats.puuid)
         if (summoner === null || summoner == undefined)
-            throw Error(`Unable to identify summoner: ${stats.puuid}`)
+            return { ok: false, value: Error(`Unable to identify summoner: ${stats.puuid}`) }
 
         const followers = await this.getFollowers(stats.puuid)
-        if (followers == undefined) throw Error(`Unable to identify summoner: ${stats.puuid}`)
+        if (followers == undefined)
+            return { ok: false, value: Error(`Unable to identify followers for: ${stats.puuid}`) }
 
         followers.forEach(async guild => {
             const message = getMessage(
@@ -40,9 +43,11 @@ export class NotificationHandler {
                 stats.assists
             )
 
-            if (!message.ok) throw message.value
+            if (!message.ok) return { ok: false, value: message.value }
             await this.sendMessages(guild, message.value)
         })
+
+        return { ok: true, value: null }
     }
 
     /**
@@ -50,11 +55,12 @@ export class NotificationHandler {
      * @param payload Payload from Postgres notification
      * @returns SummonerStats object
      */
-    private parsePayload = (payload: string) => {
+    private parsePayload = (payload: string): Result<SummonerStats> => {
         const stats = JSON.parse(payload)
 
-        if (!isSummonerStats(stats)) throw Error(`Unable to parse notification payload: ${stats}`)
-        return stats
+        if (!isSummonerStats(stats))
+            return { ok: false, value: Error(`Unable to parse notification payload: ${stats}`) }
+        return { ok: true, value: stats }
     }
 
     /**
