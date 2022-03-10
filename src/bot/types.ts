@@ -11,5 +11,11 @@ export interface Command {
 export interface Event {
     name: string
     once: boolean
-    execute: (...x: unknown[]) => Promise<Result<null>>
+    execute: (...x: unknown[]) => Promise<void>
+}
+
+export interface TemplatesDoc {
+    ints: {
+        [key: string]: string[]
+    }
 }

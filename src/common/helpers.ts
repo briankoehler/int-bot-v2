@@ -1,8 +1,15 @@
-import { Prisma } from '@prisma/client'
+import pkg from '@prisma/client'
+import { TemplatesDoc } from '../bot/types'
 import { Result } from './types/errors'
+
+const { Prisma } = pkg
 
 export const isObject = (x: unknown): x is Record<string, unknown> => {
     return typeof x === 'object' && x !== null
+}
+
+export const isTemplatesDoc = (x: unknown): x is TemplatesDoc => {
+    return isObject(x) && x.ints !== undefined
 }
 
 export const performSafePrismaOperation = async <T>(

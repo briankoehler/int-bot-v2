@@ -3,6 +3,7 @@ import { Client } from 'discord.js'
 import { performSafePrismaOperation } from '../common/helpers'
 import { Result } from '../common/types/errors'
 import prisma from '../db/dbClient'
+import { getMessage } from './getMessage'
 import { isSummonerStats } from './helpers'
 
 /**
@@ -31,7 +32,17 @@ export class NotificationHandler {
         const followers = await this.getFollowers(stats.puuid)
         if (followers == undefined) throw Error(`Unable to identify summoner: ${stats.puuid}`)
 
-        followers.forEach(async guild => await this.sendMessages(guild, 'message'))
+        followers.forEach(async guild => {
+            const message = getMessage(
+                summoner.value.name,
+                stats.kills,
+                stats.deaths,
+                stats.assists
+            )
+
+            if (!message.ok) throw message.value
+            await this.sendMessages(guild, message.value)
+        })
     }
 
     /**

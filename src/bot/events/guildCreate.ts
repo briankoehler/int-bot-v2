@@ -8,8 +8,10 @@ const guildCreate: Event = {
     once: false,
 
     execute: async (guild: unknown) => {
-        if (!(guild instanceof Guild))
-            return { ok: false, value: Error('Event must be called with a guild.') }
+        if (!(guild instanceof Guild)) {
+            console.error(`guildCreate event received non-guild: ${guild}`)
+            return
+        }
 
         const { id, name } = guild
 
@@ -17,8 +19,7 @@ const guildCreate: Event = {
             return await prisma.instance.guild.create({ data: { id, name } })
         }, 'An error occurred when creating guild in database')
 
-        if (!result.ok) return result
-        return { ok: true, value: null }
+        if (!result.ok) console.error(`Failed to create guild in database: ${result.value}`)
     }
 }
 
