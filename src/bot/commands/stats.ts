@@ -57,7 +57,7 @@ const stats: Command = {
         await interaction.reply(`
             ${bold(name + ' Stats:')}\n
             ${bold('Total Matches: ')} ${matchCount}
-            ${bold('Total Time Spent Dead: ')} ${dataOp.value._sum.totalTimeDead ?? 0 / 60} minutes
+            ${bold('Total Time Spent Dead: ')} ${(dataOp.value._sum.totalTimeDead ?? 0) / 60} minutes
             
             ${bold('Total Kills:')} ${dataOp.value._sum.kills}
             ${bold('Total Deaths:')} ${dataOp.value._sum.deaths}

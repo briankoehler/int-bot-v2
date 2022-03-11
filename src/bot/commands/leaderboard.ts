@@ -26,7 +26,7 @@ const leaderboard: Command = {
         await interaction.reply(`${bold('Int Leaderboard:')}\n\n${stats
             .map(
                 (stat, i) =>
-                    `${bold(`${i + 1})`)}) ${stat.summoner.name} - ${stat.kills}/${stat.deaths}/${
+                    `${bold(`${i + 1})`)} ${stat.summoner.name} - ${stat.kills}/${stat.deaths}/${
                         stat.assists
                     } (${stat.champion})`
             )
