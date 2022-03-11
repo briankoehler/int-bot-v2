@@ -58,6 +58,26 @@ const follow: Command = {
 
             if (!followedOp.ok) return followedOp
 
+            if (followedOp.value !== null) {
+                await interaction.reply('Summoner is already followed.')
+                return { ok: true, value: null }
+            }
+
+            // Follow summoner
+            const followOp = await performSafePrismaOperation(
+                async () =>
+                    await prisma.instance.guildFollowing.create({
+                        data: {
+                            puuid,
+                            guildId
+                        }
+                    }),
+                'An error occurred when following summoner'
+            )
+
+            if (!followOp.ok) return followOp
+
+            await interaction.reply(`Setting ${interaction.guild.name} to follow ${name}.`)
             return { ok: true, value: null }
         }
 
