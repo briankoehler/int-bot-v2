@@ -67,7 +67,9 @@ export class RiotApi {
      */
     getSummoner = async (summonerName: string) =>
         this.getData(
-            `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`,
+            `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURI(
+                summonerName
+            )}`,
             isSummonerResponse
         )
 
