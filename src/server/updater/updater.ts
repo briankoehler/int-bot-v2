@@ -91,6 +91,19 @@ export abstract class Updater {
             matchIds.forEach(newMatches.add, newMatches)
         }
 
+        // Remove old match IDs from set
+        const removalsOp = await performSafePrismaOperation(async () => {
+            return await prisma.instance.match.findMany({
+                where: { matchId: { in: Array.from(newMatches) } }
+            })
+        })
+
+        if (!removalsOp.ok) {
+            console.error(removalsOp.value)
+            return newMatches
+        }
+
+        removalsOp.value.forEach(match => newMatches.delete(match.matchId))
         return newMatches
     }
 
@@ -140,7 +153,7 @@ export abstract class Updater {
 
             const champion = handleResult(await Converter.convertChampionIdToName(data.championId))
 
-            return await performSafePrismaOperation(async () => {
+            await performSafePrismaOperation(async () => {
                 return await prisma.instance.summonerStats.create({
                     data: {
                         puuid,

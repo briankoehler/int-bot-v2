@@ -17,6 +17,7 @@ app.use('/guild', guild)
 app.use('/guildfollowing', guildFollowing)
 
 // Schedule data collection job
+await Updater.update()
 schedule.scheduleJob('*/5 * * * *', async () => {
     await Updater.update()
 })
