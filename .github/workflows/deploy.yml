@@ -15,6 +15,9 @@ jobs:
                 username: ${{secrets.SSH_USERNAME}}
                 
                 script: |
+                    export PATH=$PATH:/root/.nvm/versions/node/v17.6.0/bin
                     cd ~/int-bot-v2
                     pm2 stop int-server bot
                     git pull
+                    npm install
+                    pm2 reload int-server bot
