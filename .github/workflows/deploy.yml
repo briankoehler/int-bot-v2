@@ -14,4 +14,9 @@ jobs:
                 key: ${{secrets.SSH_KEY}}
                 username: ${{secrets.SSH_USERNAME}}
                 
-                script: whoami
+                script: |
+                    cd ~/int-bot-v2
+                    pm2 stop int-server bot
+                    git pull
+                    npm install
+                    pm2 restart int-server bot
