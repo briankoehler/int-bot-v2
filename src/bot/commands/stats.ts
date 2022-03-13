@@ -29,7 +29,18 @@ const stats: Command = {
             async () =>
                 await prisma.instance.summonerStats.aggregate({
                     where: {
-                        summoner: { name }
+                        summoner: { name },
+                        match: {
+                            queue: {
+                                in: [
+                                    // This isn't the best way because it's hard coded, but it works for now
+                                    '5v5 Draft Pick games',
+                                    '5v5 Ranked Solo games',
+                                    '5v5 Ranked Flex games',
+                                    'Clash games'
+                                ]
+                            }
+                        }
                     },
                     _sum: {
                         kills: true,
@@ -57,7 +68,9 @@ const stats: Command = {
         await interaction.reply(`
             ${bold(name + ' Stats:')}\n
             ${bold('Total Matches: ')} ${matchCount}
-            ${bold('Total Time Spent Dead: ')} ${(dataOp.value._sum.totalTimeDead ?? 0) / 60} minutes
+            ${bold('Total Time Spent Dead: ')} ${
+            (dataOp.value._sum.totalTimeDead ?? 0) / 60
+        } minutes
             
             ${bold('Total Kills:')} ${dataOp.value._sum.kills}
             ${bold('Total Deaths:')} ${dataOp.value._sum.deaths}

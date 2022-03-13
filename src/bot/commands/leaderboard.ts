@@ -1,10 +1,20 @@
 import { bold, SlashCommandBuilder } from '@discordjs/builders'
-import { SummonerStats } from '@prisma/client'
+import pkg from '@prisma/client'
 import { CacheType, CommandInteraction } from 'discord.js'
-import { performSafePrismaOperation } from '../../common/helpers'
+import { isObject, performSafePrismaOperation } from '../../common/helpers'
 import { handleResult, Result } from '../../common/types/errors'
 import prisma from '../../db/dbClient'
 import { Command } from '../types'
+
+interface LeaderboardStat {
+    name: string
+    champion: string
+    kills: number
+    deaths: number
+    assists: number
+}
+
+const { Prisma } = pkg
 
 const leaderboard: Command = {
     data: new SlashCommandBuilder()
@@ -20,13 +30,15 @@ const leaderboard: Command = {
             return { ok: true, value: null }
         }
 
+        // Fetch data
         const puuids = handleResult(await fetchPuuids(interaction, guildId))
         const stats = handleResult(await fetchTopStats(interaction, puuids))
 
+        // Construct message
         await interaction.reply(`${bold('Int Leaderboard:')}\n\n${stats
             .map(
                 (stat, i) =>
-                    `${bold(`${i + 1})`)} ${stat.summoner.name} - ${stat.kills}/${stat.deaths}/${
+                    `${bold(`${i + 1})`)} ${stat.name} - ${stat.kills}/${stat.deaths}/${
                         stat.assists
                     } (${stat.champion})`
             )
@@ -37,6 +49,12 @@ const leaderboard: Command = {
     }
 }
 
+/**
+ * Fetch all PUUIDs that a guild is interested in.
+ * @param interaction CommandInteraction that invoked the command
+ * @param guildId Guild ID of the guild that invoked the command
+ * @returns PUUIDs of summoners followed by guild
+ */
 const fetchPuuids = async (
     interaction: CommandInteraction,
     guildId: string
@@ -57,30 +75,32 @@ const fetchPuuids = async (
     return { ok: true, value: dataOp.value.map(({ puuid }) => puuid) }
 }
 
+/**
+ * Fetch the top stats for a given list of PUUIDs.
+ * @param interaction CommandInteraction that invoked the command
+ * @param puuids PUUIDs of summoners to fetch stats for
+ * @returns Top 10 ints
+ */
 const fetchTopStats = async (
     interaction: CommandInteraction,
     puuids: string[]
-): Promise<
-    Result<
-        (SummonerStats & {
-            summoner: { name: string }
-        })[]
-    >
-> => {
+): Promise<Result<LeaderboardStat[]>> => {
     const dataOp = await performSafePrismaOperation(
         async () =>
-            await prisma.instance.summonerStats.findMany({
-                take: 10,
-                where: { puuid: { in: puuids } },
-                orderBy: { deaths: 'desc' },
-                include: {
-                    summoner: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            })
+            await prisma.instance.$queryRaw`
+                SELECT summoner_stats.*, summoner.name FROM summoner_stats
+                INNER JOIN summoner ON summoner.puuid = summoner_stats.puuid
+                INNER JOIN match ON match.match_id = summoner_stats.match_id
+                WHERE summoner_stats.puuid IN (${Prisma.join(puuids)})
+                    AND match.queue IN ('5v5 Draft Pick games', '5v5 Ranked Solo games', '5v5 Ranked Flex games', 'Clash games')
+                    AND (
+                        ((summoner_stats.kills * 2 + summoner_stats.assists) / (summoner_stats.deaths * 2) < 1.3 AND summoner_stats.deaths - summoner_stats.kills > 2 AND summoner_stats.deaths > 3)
+                        AND NOT (summoner_stats.deaths < 6 AND summoner_stats.kills + summoner_stats.assists > 3)
+                        AND NOT (summoner_stats.deaths < 10 AND summoner_stats.kills > 2 AND summoner_stats.kills + summoner_stats.assists > 7)
+                    )
+                ORDER BY summoner_stats.deaths DESC, summoner_stats.kills ASC, summoner_stats.assists ASC
+                LIMIT 10
+            `
     )
 
     if (!dataOp.ok) {
@@ -88,7 +108,28 @@ const fetchTopStats = async (
         return { ok: false, value: Error('Error getting leaderboard.') }
     }
 
-    return { ok: true, value: dataOp.value }
+    if (Array.isArray(dataOp.value) && dataOp.value.every(isLeaderboardInfo)) {
+        return { ok: true, value: dataOp.value }
+    }
+
+    interaction.reply('Error getting leaderboard.')
+    return { ok: false, value: Error('Unable to parse result from database query.') }
+}
+
+const isLeaderboardInfo = (x: unknown): x is LeaderboardStat => {
+    if (!isObject(x)) return false
+    return (
+        x.name !== undefined &&
+        typeof x.name === 'string' &&
+        x.champion !== undefined &&
+        typeof x.champion === 'string' &&
+        x.kills !== undefined &&
+        typeof x.kills === 'number' &&
+        x.deaths !== undefined &&
+        typeof x.deaths === 'number' &&
+        x.assists !== undefined &&
+        typeof x.assists === 'number'
+    )
 }
 
 export { leaderboard as command }
