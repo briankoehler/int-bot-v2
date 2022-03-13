@@ -25,11 +25,30 @@ const stats: Command = {
             return { ok: false, value: Error('Summoner name not specified.') }
         }
 
+        const nameOp = await performSafePrismaOperation(async () =>
+            prisma.instance.summoner.findFirst({
+                where: { name: { equals: name, mode: 'insensitive' } },
+                rejectOnNotFound: true
+            })
+        )
+
+        if (!nameOp.ok) {
+            await interaction.reply('Summoner not found.')
+            return { ok: true, value: null }
+        }
+
+        const realName = nameOp.value.name
+
         const dataOp = await performSafePrismaOperation(
             async () =>
                 await prisma.instance.summonerStats.aggregate({
                     where: {
-                        summoner: { name }
+                        summoner: {
+                            name: {
+                                equals: name,
+                                mode: 'insensitive'
+                            }
+                        }
                     },
                     _sum: {
                         kills: true,
@@ -46,18 +65,22 @@ const stats: Command = {
         }
 
         const matchCount = await prisma.instance.summonerStats.count({
-            where: { summoner: { name } }
+            where: {
+                summoner: {
+                    name: {
+                        equals: name,
+                        mode: 'insensitive'
+                    }
+                }
+            }
         })
 
-        if (matchCount === 0) {
-            await interaction.reply(`No matches found for ${name}.`)
-            return { ok: true, value: null }
-        }
-
         await interaction.reply(`
-            ${bold(name + ' Stats:')}\n
+            ${bold(realName + ' Stats:')}\n
             ${bold('Total Matches: ')} ${matchCount}
-            ${bold('Total Time Spent Dead: ')} ${(dataOp.value._sum.totalTimeDead ?? 0) / 60} minutes
+            ${bold('Total Time Spent Dead: ')} ${
+            (dataOp.value._sum.totalTimeDead ?? 0) / 60
+        } minutes
             
             ${bold('Total Kills:')} ${dataOp.value._sum.kills}
             ${bold('Total Deaths:')} ${dataOp.value._sum.deaths}
