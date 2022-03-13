@@ -16,7 +16,4 @@ jobs:
                 
                 script: |
                     cd ~/int-bot-v2
-                    pm2 stop int-server bot
                     git pull
-                    npm install
-                    pm2 reload int-server bot
