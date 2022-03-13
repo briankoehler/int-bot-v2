@@ -23,14 +23,14 @@ const leaderboard: Command = {
         const puuids = handleResult(await fetchPuuids(interaction, guildId))
         const stats = handleResult(await fetchTopStats(interaction, puuids))
 
-        await interaction.reply(`${bold('Int Leaderboard:')}\n\n${stats
+        await interaction.reply(`_ _\n_ _\n${bold('INT LEADERBOARD\n--------------------')}\n${stats
             .map(
                 (stat, i) =>
-                    `${bold(`${i + 1})`)} ${stat.summoner.name} - ${stat.kills}/${stat.deaths}/${
-                        stat.assists
+                    `${bold(`${i + 1})`)} ${stat.kills}/${stat.deaths}/${stat.assists} - ${
+                        stat.summoner.name
                     } (${stat.champion})`
             )
-            .join('\n')}
+            .join('\n')}\n_ _
         `)
 
         return { ok: true, value: null }
