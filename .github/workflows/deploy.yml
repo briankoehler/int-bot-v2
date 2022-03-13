@@ -20,4 +20,4 @@ jobs:
                     pm2 stop int-server bot
                     git pull
                     npm install
-                    pm2 reload int-server bot
+                    pm2 restart int-server bot
