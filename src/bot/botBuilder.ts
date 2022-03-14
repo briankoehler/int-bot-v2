@@ -49,6 +49,7 @@ export class BotBuilder {
      */
     build = async () => {
         const client = new Client({ intents: this.intents })
+        // @ts-ignore
         client.commands = new Collection<string, Command>()
 
         await this.realBuildCommands(client)
@@ -71,6 +72,7 @@ export class BotBuilder {
             commandFiles.forEach(async file => {
                 const { command } = await import(`.${dir}/${file}`)
                 if (!isCommand(command)) throw Error(`Command file not parsable: ${file}`)
+                // @ts-ignore
                 client.commands.set(command.data.name, command)
             })
         })
@@ -105,6 +107,7 @@ export class BotBuilder {
         client.on('interactionCreate', async interaction => {
             if (!interaction.isCommand()) return
 
+            // @ts-ignore
             const command: Command = client.commands.get(interaction.commandName)
             if (!command) return
 
