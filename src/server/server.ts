@@ -6,7 +6,8 @@ import { guildFollowing } from './controllers/guildFollowing'
 import { match } from './controllers/match'
 import { summoner } from './controllers/summoner'
 import { summonerStats } from './controllers/summonerStats'
-import { Updater } from './updater/updater'
+import { MatchUpdater } from './updater/matchUpdater'
+import { SummonersUpdater } from './updater/summonersUpdater'
 
 const app = express()
 app.use(express.json())
@@ -16,10 +17,15 @@ app.use('/match', match)
 app.use('/guild', guild)
 app.use('/guildfollowing', guildFollowing)
 
-// Schedule data collection job
-await Updater.update()
+// Schedule match data collection job
+await MatchUpdater.update()
 schedule.scheduleJob('*/5 * * * *', async () => {
-    await Updater.update()
+    await MatchUpdater.update()
+})
+
+// Schedule summoner update job
+schedule.scheduleJob('0 0 * * *', async () => {
+    await SummonersUpdater.update()
 })
 
 const server = app.listen(3000, () => {
