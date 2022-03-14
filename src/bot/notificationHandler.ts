@@ -21,20 +21,43 @@ export class NotificationHandler {
      * @param payload Payload from the Postgres notification
      */
     handle = async (payload: string): Promise<Result<null>> => {
+        // Parse the payload
         const statsResult = this.parsePayload(payload)
         if (!statsResult.ok) return statsResult
         const stats = statsResult.value
 
+        // Ensure stats indicate an interesting event by satisfying the following conditions:
+        // - Stats indicate an int
+        // - Match was a desired queue
         if (!this.isInt(stats.kills, stats.deaths, stats.assists)) return { ok: true, value: null }
+        const queueOp = await performSafePrismaOperation(
+            async () =>
+                await prisma.instance.match.findFirst({
+                    where: { matchId: stats.matchId },
+                    select: { queue: true }
+                })
+        )
+        if (!queueOp.ok) return { ok: true, value: null }
+        if (queueOp.value === null) return { ok: false, value: Error('Queue not found.') }
+        const validQueues = [
+            '5v5 Draft Pick games',
+            '5v5 Ranked Solo games',
+            '5v5 Ranked Flex games',
+            'Clash games'
+        ]
+        if (!validQueues.includes(queueOp.value.queue)) return { ok: true, value: null }
 
+        // Get the summoner
         const summoner = await this.getSummoner(stats.puuid)
         if (summoner === null || summoner == undefined)
             return { ok: false, value: Error(`Unable to identify summoner: ${stats.puuid}`) }
 
+        // Get guilds to send messages to
         const followers = await this.getFollowers(stats.puuid)
         if (followers == undefined)
             return { ok: false, value: Error(`Unable to identify followers for: ${stats.puuid}`) }
 
+        // Send messages
         followers.forEach(async guild => {
             const message = getMessage(
                 summoner.value.name,
