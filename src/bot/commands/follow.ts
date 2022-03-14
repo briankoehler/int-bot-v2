@@ -1,5 +1,4 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
-import { Summoner } from '@prisma/client'
 import { CommandInteraction } from 'discord.js'
 import { performSafePrismaOperation } from '../../common/helpers'
 import { RiotApi } from '../../common/riotApi'
@@ -79,14 +78,11 @@ const follow: Command = {
  * @returns Result of whether summoner is in database
  */
 const checkDbForSummoner = async (name: string) =>
-    await performSafePrismaOperation(
-        async () =>
-            await prisma.instance.$queryRaw<Summoner>`
-                SELECT * FROM summoner
-                WHERE REPLACE(LOWER(name), ' ', '') = REPLACE(LOWER(${name}), ' ', '')
-            `,
-        'An error occurred when checking if summoner is in database'
-    )
+    await performSafePrismaOperation(async () => {
+        return await prisma.instance.summoner.findFirst({
+            where: { name: { equals: name, mode: 'insensitive' } }
+        })
+    }, 'An error occurred when checking if summoner is in database')
 
 /**
  * Determine if summoner is followed by guild.

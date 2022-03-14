@@ -1,1 +1,0 @@
-CREATE INDEX normalized_name ON summoner (replace(lower(name), ' ', ''));
