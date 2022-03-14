@@ -42,14 +42,7 @@ const stats: Command = {
         const dataOp = await performSafePrismaOperation(
             async () =>
                 await prisma.instance.summonerStats.aggregate({
-                    where: {
-                        summoner: {
-                            name: {
-                                equals: name,
-                                mode: 'insensitive'
-                            }
-                        }
-                    },
+                    where: { summoner: { name: { equals: name, mode: 'insensitive' } } },
                     _sum: {
                         kills: true,
                         deaths: true,
@@ -65,27 +58,22 @@ const stats: Command = {
         }
 
         const matchCount = await prisma.instance.summonerStats.count({
-            where: {
-                summoner: {
-                    name: {
-                        equals: name,
-                        mode: 'insensitive'
-                    }
-                }
-            }
+            where: { summoner: { name: { equals: name, mode: 'insensitive' } } }
         })
 
-        await interaction.reply(`
-            ${bold(realName + ' Stats:')}\n
-            ${bold('Total Matches: ')} ${matchCount}
-            ${bold('Total Time Spent Dead: ')} ${
-            (dataOp.value._sum.totalTimeDead ?? 0) / 60
-        } minutes
-            
-            ${bold('Total Kills:')} ${dataOp.value._sum.kills}
-            ${bold('Total Deaths:')} ${dataOp.value._sum.deaths}
-            ${bold('Total Assists:')} ${dataOp.value._sum.assists}
-        `)
+        const data = {
+            'Total Matches': matchCount,
+            'Total Time Spent Dead': `${(dataOp.value._sum.totalTimeDead ?? 0) / 60} minutes`,
+            'Total Kills': dataOp.value._sum.kills ?? 0,
+            'Total Deaths': dataOp.value._sum.deaths ?? 0,
+            'Total Assists': dataOp.value._sum.assists ?? 0
+        }
+
+        await interaction.reply(
+            `_ _\n_ _\n${bold(`${realName} Stats`)}_ _\n_ _\n${Object.entries(data)
+                .map((e, i) => `${bold(`${e[0]}:`)} ${e[1]}${i === 1 ? '\n' : ''}`)
+                .join('\n')}\n_ _`
+        )
 
         return { ok: true, value: null }
     }

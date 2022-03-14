@@ -31,7 +31,7 @@ const unfollow: Command = {
         const testCount = await prisma.instance.guildFollowing.count({
             where: {
                 guildId: interaction.guildId,
-                summoner: { name }
+                summoner: { name: { equals: name, mode: 'insensitive' } }
             }
         })
 
@@ -42,7 +42,7 @@ const unfollow: Command = {
 
         const deleteOp = await performSafePrismaOperation(async () => {
             return await prisma.instance.guildFollowing.deleteMany({
-                where: { guildId, summoner: { name } }
+                where: { guildId, summoner: { name: { equals: name, mode: 'insensitive' } } }
             })
         })
 

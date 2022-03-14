@@ -17,6 +17,7 @@ const follow: Command = {
     guildOnly: true,
 
     execute: async (interaction: CommandInteraction) => {
+        // Check that interaction was in a guild
         if (interaction.guildId === null || interaction.guild === null) {
             await interaction.reply('Command must be used in a guild.')
             return { ok: false, value: Error('Command must be used in a guild.') }
@@ -26,6 +27,7 @@ const follow: Command = {
         // Get desired summoner
         const name = interaction.options.getString('name')
         let puuid = ''
+        let realName = ''
 
         // Check that name was specified
         if (name === null) {
@@ -33,77 +35,89 @@ const follow: Command = {
             return { ok: false, value: Error('Summoner name not specified.') }
         }
 
-        // Check if summoner PUUID is in database
-        let result: { puuid: string } | null = null
-        const puuidOp = await performSafePrismaOperation(async () => {
-            return await prisma.instance.summoner.findFirst({
-                where: { name },
-                select: { puuid: true }
-            })
-        }, 'An error occurred when checking if summoner is in database')
+        // Check that summoner is in database
+        const summonerOp = await checkDbForSummoner(name)
+        if (!summonerOp.ok) return summonerOp
 
-        if (!puuidOp.ok) return puuidOp
+        // Get puuid from database or get from riot api
+        if (summonerOp.value === null) {
+            const riot = new RiotApi(config.RIOT_TOKEN)
+            const summoner = handleResult(await riot.getSummoner(name))
 
-        result = puuidOp.value
+            puuid = summoner.puuid
+            realName = summoner.name
 
-        if (result !== null) {
-            puuid = result.puuid
+            // Add summoner to database
+            const createSummonerOp = await createSummoner(puuid, realName)
+            if (!createSummonerOp.ok) return createSummonerOp
+        } else {
+            puuid = summonerOp.value.puuid
+            realName = summonerOp.value.name
+        }
 
-            // Check if summoner is already followed
-            const followedOp = await performSafePrismaOperation(async () => {
-                return await prisma.instance.guildFollowing.findFirst({
-                    where: { puuid, guildId }
-                })
-            }, 'An error occurred when checking if summoner is followed')
-
-            if (!followedOp.ok) return followedOp
-
-            if (followedOp.value !== null) {
-                await interaction.reply('Summoner is already followed.')
-                return { ok: true, value: null }
-            }
-
-            // Follow summoner
-            const followOp = await performSafePrismaOperation(
-                async () =>
-                    await prisma.instance.guildFollowing.create({
-                        data: {
-                            puuid,
-                            guildId
-                        }
-                    }),
-                'An error occurred when following summoner'
-            )
-
-            if (!followOp.ok) return followOp
-
-            await interaction.reply(`Setting ${interaction.guild.name} to follow ${name}.`)
+        // Check that summoner is followed by guild
+        const followedOp = await checkGuildFollowsSummoner(puuid, guildId)
+        if (!followedOp.ok) return followedOp
+        if (followedOp.value !== null) {
+            await interaction.reply('Summoner is already followed.')
             return { ok: true, value: null }
         }
 
-        // If summoner is not in database, get PUUID from Riot API
-        const riot = new RiotApi(config.RIOT_TOKEN)
-        puuid = handleResult(await riot.getSummoner(name)).puuid
+        // Follow summoner
+        const followOp = await followSummoner(puuid, guildId)
+        if (!followOp.ok) return followOp
 
-        // Create summoner in database
-        const createSummonerOp = await performSafePrismaOperation(async () => {
-            return await prisma.instance.summoner.create({ data: { name, puuid } })
-        }, 'An error occurred when creating summoner in database')
-
-        if (!createSummonerOp.ok) return createSummonerOp
-
-        // Add following to db
-        const createGuildFollowingOp = await performSafePrismaOperation(async () => {
-            return await prisma.instance.guildFollowing.create({
-                data: { guildId, puuid }
-            })
-        }, 'An error occurred when adding following to database')
-
-        if (!createGuildFollowingOp.ok) return createGuildFollowingOp
-
-        await interaction.reply(`Setting ${interaction.guild.name} to follow ${name}.`)
+        await interaction.reply(`Setting ${interaction.guild.name} to follow ${realName}.`)
         return { ok: true, value: null }
     }
 }
+
+/**
+ * Determine if summoner is in database by name.
+ * @param name The summoner to check for in the database
+ * @returns Result of whether summoner is in database
+ */
+const checkDbForSummoner = async (name: string) =>
+    await performSafePrismaOperation(async () => {
+        return await prisma.instance.summoner.findFirst({
+            where: { name: { equals: name, mode: 'insensitive' } }
+        })
+    }, 'An error occurred when checking if summoner is in database')
+
+/**
+ * Determine if summoner is followed by guild.
+ * @param puuid The puuid of the summoner to check if followed
+ * @param guildId The guild to check if following
+ * @returns Result of whether summoner is followed
+ */
+const checkGuildFollowsSummoner = async (puuid: string, guildId: string) =>
+    await performSafePrismaOperation(
+        async () => await prisma.instance.guildFollowing.findFirst({ where: { puuid, guildId } }),
+        'An error occurred when checking if summoner is followed'
+    )
+
+/**
+ * Set guild to follow summoner.
+ * @param puuid The puuid of the summoner to follow
+ * @param guildId The ID of guild to follow summoner
+ * @returns Result of whether summoner was followed
+ */
+const followSummoner = async (puuid: string, guildId: string) =>
+    await performSafePrismaOperation(
+        async () => await prisma.instance.guildFollowing.create({ data: { puuid, guildId } }),
+        'An error occurred when following summoner'
+    )
+
+/**
+ * Add a summoner to the database.
+ * @param puuid Puuid of summoner to create
+ * @param name Name of summoner to create
+ * @returns Whether summoner was created
+ */
+const createSummoner = async (puuid: string, name: string) =>
+    await performSafePrismaOperation(
+        async () => await prisma.instance.summoner.create({ data: { puuid, name } }),
+        'An error occurred when creating summoner'
+    )
 
 export { follow as command }
