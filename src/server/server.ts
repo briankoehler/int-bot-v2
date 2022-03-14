@@ -1,13 +1,8 @@
 import express from 'express'
 import schedule from 'node-schedule'
 import prisma from '../db/dbClient'
-import { guild } from './controllers/guild'
-import { guildFollowing } from './controllers/guildFollowing'
-import { match } from './controllers/match'
-import { summoner } from './controllers/summoner'
-import { summonerStats } from './controllers/summonerStats'
-import { MatchUpdater } from './updater/matchUpdater'
-import { SummonersUpdater } from './updater/summonersUpdater'
+import { guild, guildFollowing, match, summoner, summonerStats } from './controllers'
+import { Updater } from './updater/updater'
 
 const app = express()
 app.use(express.json())
