@@ -9,7 +9,7 @@ export abstract class SummonersUpdater extends Updater {
         const summoners = await SummonersUpdater.getSummoners()
 
         for (const summoner of summoners) {
-            const riotData = await SummonersUpdater.riot.getSummoner(summoner.puuid)
+            const riotData = await SummonersUpdater.riot.getSummonerFromPuuid(summoner.puuid)
 
             if (!riotData.ok) {
                 console.error(riotData.value)
