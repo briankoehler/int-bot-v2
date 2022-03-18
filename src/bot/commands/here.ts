@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
 import { CacheType, CommandInteraction } from 'discord.js'
 import { performSafePrismaOperation } from '../../common/helpers'
-import prisma from '../../db/dbClient'
-import { Command } from '../types'
+import { Command } from '../../common/types/bot'
+import { prisma } from '../../db/dbClient'
 
 const here: Command = {
     data: new SlashCommandBuilder()
@@ -18,7 +18,7 @@ const here: Command = {
         const id = interaction.guildId
 
         const updateOp = await performSafePrismaOperation(async () => {
-            return await prisma.instance.guild.update({
+            return await prisma.guild.update({
                 where: { id },
                 data: { channelId: interaction.channelId }
             })

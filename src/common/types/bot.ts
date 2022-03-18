@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
 import { CacheType, CommandInteraction } from 'discord.js'
-import { Result } from '../common/types/errors'
+import { isObject } from '../helpers'
+import { Result } from './errors'
 
 export interface Command {
     data: Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
@@ -18,4 +19,18 @@ export interface TemplatesDoc {
     ints: {
         [key: string]: string[]
     }
+}
+
+export const isCommand = (x: unknown): x is Command => {
+    if (!isObject(x)) return false
+    return 'data' in x && 'execute' in x && 'guildOnly' in x
+}
+
+export const isEvent = (x: unknown): x is Event => {
+    if (!isObject(x)) return false
+    return 'name' in x && 'once' in x && 'execute' in x
+}
+
+export const isTemplatesDoc = (x: unknown): x is TemplatesDoc => {
+    return isObject(x) && x.ints !== undefined
 }

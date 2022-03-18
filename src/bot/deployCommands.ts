@@ -4,8 +4,8 @@ import 'dotenv/config'
 import fs from 'fs'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { isCommand } from '../common/types/bot'
 import { config } from '../config'
-import { isCommand } from './helpers'
 
 const rest = new REST({ version: '9' }).setToken(config.BOT_TOKEN)
 

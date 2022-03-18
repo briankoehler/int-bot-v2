@@ -1,4 +1,4 @@
-import prisma from '../../db/dbClient'
+import { prisma } from '../../db/dbClient'
 import { Updater } from './updater'
 
 export abstract class SummonersUpdater extends Updater {
@@ -18,7 +18,7 @@ export abstract class SummonersUpdater extends Updater {
 
             const name = riotData.value.name
             if (name !== summoner.name)
-                prisma.instance.summoner.update({
+                prisma.summoner.update({
                     where: { puuid: summoner.puuid },
                     data: { name }
                 })

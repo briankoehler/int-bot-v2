@@ -2,9 +2,9 @@ import { bold, SlashCommandBuilder } from '@discordjs/builders'
 import pkg from '@prisma/client'
 import { CacheType, CommandInteraction } from 'discord.js'
 import { isObject, performSafePrismaOperation } from '../../common/helpers'
+import { Command } from '../../common/types/bot'
 import { handleResult, Result } from '../../common/types/errors'
-import prisma from '../../db/dbClient'
-import { Command } from '../types'
+import { prisma } from '../../db/dbClient'
 
 interface LeaderboardStat {
     name: string
@@ -60,7 +60,7 @@ const fetchPuuids = async (
 ): Promise<Result<string[]>> => {
     const dataOp = await performSafePrismaOperation(
         async () =>
-            await prisma.instance.guildFollowing.findMany({
+            await prisma.guildFollowing.findMany({
                 where: { guildId },
                 select: { puuid: true }
             })
@@ -86,7 +86,7 @@ const fetchTopStats = async (
 ): Promise<Result<LeaderboardStat[]>> => {
     const dataOp = await performSafePrismaOperation(
         async () =>
-            await prisma.instance.$queryRaw`
+            await prisma.$queryRaw`
                 SELECT summoner_stats.*, summoner.name FROM summoner_stats
                 INNER JOIN summoner ON summoner.puuid = summoner_stats.puuid
                 INNER JOIN match ON match.match_id = summoner_stats.match_id

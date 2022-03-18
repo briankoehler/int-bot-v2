@@ -1,13 +1,7 @@
-import pkg from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 
-const { PrismaClient } = pkg
+// export const prisma = { instance: new PrismaClient() }
 
-const DbClient = {
-    instance: new PrismaClient(),
-}
+// Object.freeze(prisma)
 
-export type IDbClient = typeof DbClient
-
-Object.freeze(DbClient)
-
-export default DbClient
+export const prisma = new PrismaClient()

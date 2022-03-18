@@ -2,8 +2,7 @@ import { BitFieldResolvable, Client, Collection, DMChannel, IntentsString } from
 import fs from 'fs'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { isCommand, isEvent } from './helpers'
-import { Command } from './types'
+import { Command, isCommand, isEvent } from '../common/types/bot'
 
 /**
  * Build a Discord.js using helper methods.

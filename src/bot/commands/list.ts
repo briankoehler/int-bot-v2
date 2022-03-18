@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
 import { CommandInteraction, Formatters } from 'discord.js'
 import { performSafePrismaOperation } from '../../common/helpers'
-import prisma from '../../db/dbClient'
-import { Command } from '../types'
+import { Command } from '../../common/types/bot'
+import { prisma } from '../../db/dbClient'
 
 const list: Command = {
     data: new SlashCommandBuilder().setName('list').setDescription('List followed summoners.'),
@@ -16,7 +16,7 @@ const list: Command = {
         const guildId = interaction.guildId
 
         const summonersOp = await performSafePrismaOperation(async () => {
-            return await prisma.instance.guildFollowing.findMany({
+            return await prisma.guildFollowing.findMany({
                 where: { guildId },
                 select: { summoner: true }
             })

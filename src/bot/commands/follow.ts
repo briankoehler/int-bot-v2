@@ -2,10 +2,10 @@ import { SlashCommandBuilder } from '@discordjs/builders'
 import { CommandInteraction } from 'discord.js'
 import { performSafePrismaOperation } from '../../common/helpers'
 import { RiotApi } from '../../common/riotApi'
+import { Command } from '../../common/types/bot'
 import { handleResult } from '../../common/types/errors'
 import { config } from '../../config'
-import prisma from '../../db/dbClient'
-import { Command } from '../types'
+import { prisma } from '../../db/dbClient'
 
 const follow: Command = {
     data: new SlashCommandBuilder()
@@ -79,7 +79,7 @@ const follow: Command = {
  */
 const checkDbForSummoner = async (name: string) =>
     await performSafePrismaOperation(async () => {
-        return await prisma.instance.summoner.findFirst({
+        return await prisma.summoner.findFirst({
             where: { name: { equals: name, mode: 'insensitive' } }
         })
     }, 'An error occurred when checking if summoner is in database')
@@ -92,7 +92,7 @@ const checkDbForSummoner = async (name: string) =>
  */
 const checkGuildFollowsSummoner = async (puuid: string, guildId: string) =>
     await performSafePrismaOperation(
-        async () => await prisma.instance.guildFollowing.findFirst({ where: { puuid, guildId } }),
+        async () => await prisma.guildFollowing.findFirst({ where: { puuid, guildId } }),
         'An error occurred when checking if summoner is followed'
     )
 
@@ -104,7 +104,7 @@ const checkGuildFollowsSummoner = async (puuid: string, guildId: string) =>
  */
 const followSummoner = async (puuid: string, guildId: string) =>
     await performSafePrismaOperation(
-        async () => await prisma.instance.guildFollowing.create({ data: { puuid, guildId } }),
+        async () => await prisma.guildFollowing.create({ data: { puuid, guildId } }),
         'An error occurred when following summoner'
     )
 
@@ -116,7 +116,7 @@ const followSummoner = async (puuid: string, guildId: string) =>
  */
 const createSummoner = async (puuid: string, name: string) =>
     await performSafePrismaOperation(
-        async () => await prisma.instance.summoner.create({ data: { puuid, name } }),
+        async () => await prisma.summoner.create({ data: { puuid, name } }),
         'An error occurred when creating summoner'
     )
 

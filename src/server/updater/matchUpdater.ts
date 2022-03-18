@@ -1,7 +1,7 @@
 import { performSafePrismaOperation } from '../../common/helpers'
 import { handleResult } from '../../common/types/errors'
 import { MatchResponse, ParticipantData } from '../../common/types/riotResponse'
-import prisma from '../../db/dbClient'
+import { prisma } from '../../db/dbClient'
 import { Converter } from './converter'
 import { Updater } from './updater'
 
@@ -41,7 +41,7 @@ export abstract class MatchUpdater extends Updater {
         for (const puuid of puuids) {
             // Get latest timestamp of summoner from db
             const timestampsOp = await performSafePrismaOperation(async () => {
-                return await prisma.instance.summonerStats.findMany({
+                return await prisma.summonerStats.findMany({
                     where: { puuid },
                     select: { match: true }
                 })
@@ -71,7 +71,7 @@ export abstract class MatchUpdater extends Updater {
 
         // Remove old match IDs from set
         const removalsOp = await performSafePrismaOperation(async () => {
-            return await prisma.instance.match.findMany({
+            return await prisma.match.findMany({
                 where: { matchId: { in: Array.from(newMatches) } }
             })
         })
@@ -95,7 +95,7 @@ export abstract class MatchUpdater extends Updater {
         )
 
         const matchOp = await performSafePrismaOperation(async () => {
-            return await prisma.instance.match.create({
+            return await prisma.match.create({
                 data: {
                     matchId: data.metadata.matchId,
                     startTime: new Date(data.info.gameStartTimestamp),
@@ -123,14 +123,14 @@ export abstract class MatchUpdater extends Updater {
         for (const data of summonersData) {
             // Determine if summoner is followed
             const puuid = data.puuid
-            const testCount = await prisma.instance.summoner.count({ where: { puuid } })
+            const testCount = await prisma.summoner.count({ where: { puuid } })
 
             if (testCount === 0) continue
 
             const champion = handleResult(await Converter.convertChampionIdToName(data.championId))
 
             await performSafePrismaOperation(async () => {
-                return await prisma.instance.summonerStats.create({
+                return await prisma.summonerStats.create({
                     data: {
                         puuid,
                         matchId,

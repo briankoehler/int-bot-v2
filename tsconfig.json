@@ -10,7 +10,8 @@
         "outDir": "build/",
         "rootDir": "src/",
         "strict": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "strictNullChecks": true
     },
     "include": ["src/**/*"]
 }

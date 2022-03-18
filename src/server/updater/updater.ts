@@ -1,7 +1,7 @@
 import { performSafePrismaOperation } from '../../common/helpers'
 import { RiotApi } from '../../common/riotApi'
 import { config } from '../../config'
-import prisma from '../../db/dbClient'
+import { prisma } from '../../db/dbClient'
 
 export abstract class Updater {
     protected static riot: RiotApi = new RiotApi(config.RIOT_TOKEN)
@@ -13,7 +13,7 @@ export abstract class Updater {
      */
     protected static getSummoners = async () => {
         const summonersOp = await performSafePrismaOperation(
-            async () => await prisma.instance.summoner.findMany()
+            async () => await prisma.summoner.findMany()
         )
 
         if (!summonersOp.ok) return []

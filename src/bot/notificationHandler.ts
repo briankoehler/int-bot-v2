@@ -1,10 +1,9 @@
 import { Guild, Summoner, SummonerStats } from '@prisma/client'
 import { Client } from 'discord.js'
-import { performSafePrismaOperation } from '../common/helpers'
+import { isSummonerStats, performSafePrismaOperation } from '../common/helpers'
 import { Result } from '../common/types/errors'
-import prisma from '../db/dbClient'
+import { prisma } from '../db/dbClient'
 import { getMessage } from './getMessage'
-import { isSummonerStats } from './helpers'
 
 /**
  * Handle a postgres notification event and send necessary messages.
@@ -32,7 +31,7 @@ export class NotificationHandler {
         if (!this.isInt(stats.kills, stats.deaths, stats.assists)) return { ok: true, value: null }
         const queueOp = await performSafePrismaOperation(
             async () =>
-                await prisma.instance.match.findFirst({
+                await prisma.match.findFirst({
                     where: { matchId: stats.matchId },
                     select: { queue: true }
                 })
@@ -49,7 +48,7 @@ export class NotificationHandler {
 
         // Get the summoner
         const summoner = await this.getSummoner(stats.puuid)
-        if (summoner === null || summoner == undefined)
+        if (!summoner.ok)
             return { ok: false, value: Error(`Unable to identify summoner: ${stats.puuid}`) }
 
         // Get guilds to send messages to
@@ -58,7 +57,7 @@ export class NotificationHandler {
             return { ok: false, value: Error(`Unable to identify followers for: ${stats.puuid}`) }
 
         // Send messages
-        followers.forEach(async guild => {
+        for (const guild of followers) {
             const message = getMessage(
                 summoner.value.name,
                 stats.kills,
@@ -66,9 +65,12 @@ export class NotificationHandler {
                 stats.assists
             )
 
-            if (!message.ok) return { ok: false, value: message.value }
+            if (!message.ok) {
+                console.error(message.value)
+                continue
+            }
             await this.sendMessages(guild, message.value)
-        })
+        }
 
         return { ok: true, value: null }
     }
@@ -79,7 +81,12 @@ export class NotificationHandler {
      * @returns SummonerStats object
      */
     private parsePayload = (payload: string): Result<SummonerStats> => {
-        const stats = JSON.parse(payload)
+        let stats
+        try {
+            stats = JSON.parse(payload)
+        } catch (e) {
+            return { ok: false, value: Error(`Unable to parse notification payload: ${payload}`) }
+        }
 
         if (!isSummonerStats(stats))
             return { ok: false, value: Error(`Unable to parse notification payload: ${stats}`) }
@@ -93,7 +100,7 @@ export class NotificationHandler {
      */
     private getSummoner = async (puuid: string): Promise<Result<Summoner>> => {
         const op = await performSafePrismaOperation(async () => {
-            return await prisma.instance.summoner.findFirst({ where: { puuid } })
+            return await prisma.summoner.findFirst({ where: { puuid } })
         })
 
         if (!op.ok) return op
@@ -110,7 +117,7 @@ export class NotificationHandler {
      */
     private getFollowers = async (puuid: string) => {
         const op = await performSafePrismaOperation(async () => {
-            return await prisma.instance.guildFollowing.findMany({
+            return await prisma.guildFollowing.findMany({
                 where: { puuid },
                 select: { guild: true }
             })
@@ -146,6 +153,7 @@ export class NotificationHandler {
      * @returns Whether the scoreline is an "int"
      */
     private isInt = (kills: number, deaths: number, assists: number) => {
+        if (kills < 0 || deaths < 0 || assists < 0) return false
         if ((kills * 2 + assists) / (deaths * 2) < 1.3 && deaths - kills > 2 && deaths > 3) {
             if (deaths < 6 && kills + assists > 3) return false
             if (deaths < 10 && kills > 2 && kills + assists > 7) return false

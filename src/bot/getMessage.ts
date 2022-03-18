@@ -1,6 +1,6 @@
 import fs from 'fs'
 import yaml from 'js-yaml'
-import { isTemplatesDoc } from '../common/helpers'
+import { isTemplatesDoc } from '../common/types/bot'
 import { Result } from '../common/types/errors'
 
 export const getMessage = (

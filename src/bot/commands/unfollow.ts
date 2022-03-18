@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
 import { CommandInteraction } from 'discord.js'
 import { performSafePrismaOperation } from '../../common/helpers'
-import prisma from '../../db/dbClient'
-import { Command } from '../types'
+import { Command } from '../../common/types/bot'
+import { prisma } from '../../db/dbClient'
 
 const unfollow: Command = {
     data: new SlashCommandBuilder()
@@ -28,7 +28,7 @@ const unfollow: Command = {
             return { ok: false, value: Error('Summoner name not specified.') }
         }
 
-        const testCount = await prisma.instance.guildFollowing.count({
+        const testCount = await prisma.guildFollowing.count({
             where: {
                 guildId: interaction.guildId,
                 summoner: { name: { equals: name, mode: 'insensitive' } }
@@ -41,7 +41,7 @@ const unfollow: Command = {
         }
 
         const deleteOp = await performSafePrismaOperation(async () => {
-            return await prisma.instance.guildFollowing.deleteMany({
+            return await prisma.guildFollowing.deleteMany({
                 where: { guildId, summoner: { name: { equals: name, mode: 'insensitive' } } }
             })
         })

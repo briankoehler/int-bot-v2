@@ -1,20 +1,20 @@
 import express from 'express'
-import prisma from '../../db/dbClient'
+import { prisma } from '../../db/dbClient'
 
 export const guildFollowing = express.Router()
 
 guildFollowing.get('/all', async (req, res) => {
-    const all = await prisma.instance.guildFollowing.findMany()
+    const all = await prisma.guildFollowing.findMany()
     res.status(200).send(all)
 })
 
 guildFollowing.delete('/all', async (req, res) => {
-    await prisma.instance.guildFollowing.deleteMany()
+    await prisma.guildFollowing.deleteMany()
     res.status(200).send()
 })
 
 guildFollowing.post('/', async (req, res) => {
-    await prisma.instance.guildFollowing.create({
+    await prisma.guildFollowing.create({
         data: {
             guildId: req.body.guildId,
             puuid: req.body.puuid
@@ -24,7 +24,7 @@ guildFollowing.post('/', async (req, res) => {
 })
 
 guildFollowing.delete('/:id', async (req, res) => {
-    await prisma.instance.guildFollowing.delete({
+    await prisma.guildFollowing.delete({
         where: { id: req.params.id }
     })
     res.status(200).send()

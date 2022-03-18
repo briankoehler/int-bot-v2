@@ -1,9 +1,9 @@
 import { bold, SlashCommandBuilder } from '@discordjs/builders'
 import { CommandInteraction } from 'discord.js'
 import { performSafePrismaOperation } from '../../common/helpers'
+import { Command } from '../../common/types/bot'
 import { Result } from '../../common/types/errors'
-import prisma from '../../db/dbClient'
-import { Command } from '../types'
+import { prisma } from '../../db/dbClient'
 
 const stats: Command = {
     data: new SlashCommandBuilder()
@@ -27,7 +27,7 @@ const stats: Command = {
         }
 
         const nameOp = await performSafePrismaOperation(async () =>
-            prisma.instance.summoner.findFirst({
+            prisma.summoner.findFirst({
                 where: { name: { equals: name, mode: 'insensitive' } },
                 rejectOnNotFound: true
             })
@@ -42,7 +42,7 @@ const stats: Command = {
 
         const dataOp = await performSafePrismaOperation(
             async () =>
-                await prisma.instance.summonerStats.aggregate({
+                await prisma.summonerStats.aggregate({
                     where: {
                         summoner: { name: { equals: name, mode: 'insensitive' } },
                         match: {
@@ -70,7 +70,7 @@ const stats: Command = {
             return { ok: false, value: dataOp.value }
         }
 
-        const matchCount = await prisma.instance.summonerStats.count({
+        const matchCount = await prisma.summonerStats.count({
             where: {
                 summoner: { name: { equals: name, mode: 'insensitive' } },
                 match: {
@@ -124,7 +124,7 @@ const stats: Command = {
 
 const getTotalPlaytime = async (puuid: string): Promise<Result<number>> => {
     const playtimeOp = await performSafePrismaOperation(async () =>
-        prisma.instance.summonerStats.findMany({
+        prisma.summonerStats.findMany({
             where: {
                 summoner: { puuid },
                 match: {
@@ -145,7 +145,7 @@ const getTotalPlaytime = async (puuid: string): Promise<Result<number>> => {
     const matchIds = playtimeOp.value.map(e => e.matchId)
 
     const matchOp = await performSafePrismaOperation(async () =>
-        prisma.instance.match.findMany({ where: { matchId: { in: matchIds } } })
+        prisma.match.findMany({ where: { matchId: { in: matchIds } } })
     )
     if (!matchOp.ok) return matchOp
 

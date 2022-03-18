@@ -1,6 +1,6 @@
 import express from 'express'
 import schedule from 'node-schedule'
-import prisma from '../db/dbClient'
+import { prisma } from '../db/dbClient'
 import { guild, guildFollowing, match, summoner, summonerStats } from './controllers'
 import { MatchUpdater } from './updater/matchUpdater'
 import { SummonersUpdater } from './updater/summonersUpdater'
@@ -29,6 +29,6 @@ const server = app.listen(3000, () => {
 })
 
 process.on('SIGTERM', () => {
-    prisma.instance.$disconnect()
+    prisma.$disconnect()
     server.close(() => console.log('Server closed.'))
 })
