@@ -19,16 +19,22 @@ export const getMessage = (
 }
 
 const getTemplate = (deaths: number): Result<string> => {
-    const doc = yaml.load(fs.readFileSync('./src/bot/messages.yaml', 'utf8'))
+    try {
+        const doc = yaml.load(fs.readFileSync('./src/bot/messages.yaml', 'utf8'))
 
-    if (!isTemplatesDoc(doc)) return { ok: false, value: Error('Invalid messages.yaml file') }
+        if (!isTemplatesDoc(doc)) return { ok: false, value: Error('Invalid messages.yaml file') }
 
-    const key = Object.keys(doc.ints).reduce((prev, current) =>
-        Math.abs(deaths - parseInt(current)) < Math.abs(deaths - parseInt(prev)) ? current : prev
-    )
+        const key = Object.keys(doc.ints).reduce((prev, current) =>
+            Math.abs(deaths - parseInt(current)) < Math.abs(deaths - parseInt(prev))
+                ? current
+                : prev
+        )
 
-    const randomNum = (doc.ints[key].length * Math.random()) | 0
-    return { ok: true, value: doc.ints[key][randomNum] }
+        const randomNum = (doc.ints[key].length * Math.random()) | 0
+        return { ok: true, value: doc.ints[key][randomNum] }
+    } catch (e) {
+        return { ok: false, value: Error(`An error occurred when getting templated: ${e}`) }
+    }
 }
 
 const formatMessage = (

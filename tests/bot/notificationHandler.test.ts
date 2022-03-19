@@ -2,7 +2,7 @@ import { Guild, Summoner } from '@prisma/client'
 import * as discord from 'discord.js'
 import * as getMessage from '../../src/bot/getMessage'
 import { NotificationHandler } from '../../src/bot/notificationHandler'
-import { prismaMock } from '../singleton'
+import { prismaMock } from '../testUtil'
 
 jest.mock('../../src/bot/getMessage', () => ({
     __esmodule: true,
@@ -73,6 +73,10 @@ describe('payload handling', () => {
     })
 
     it('attempts to send messages when everything works', async () => {
+        // Suppress console errors, because we're expecting them due to the fact that
+        // we cannot mock sending Discord messages
+        jest.spyOn(console, 'error').mockImplementation(() => {})
+
         const following: Guild[] = [
             { id: 'abc', name: 'Test Guild 1', channelId: '123', active: true },
             { id: 'def', name: 'Test Guild 2', channelId: '456', active: true }
