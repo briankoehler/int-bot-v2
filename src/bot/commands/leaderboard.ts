@@ -14,8 +14,6 @@ interface LeaderboardStat {
     assists: number
 }
 
-const { Prisma } = pkg
-
 const leaderboard: Command = {
     data: new SlashCommandBuilder()
         .setName('leaderboard')
@@ -90,7 +88,7 @@ const fetchTopStats = async (
                 SELECT summoner_stats.*, summoner.name FROM summoner_stats
                 INNER JOIN summoner ON summoner.puuid = summoner_stats.puuid
                 INNER JOIN match ON match.match_id = summoner_stats.match_id
-                WHERE summoner_stats.puuid IN (${Prisma.join(puuids)})
+                WHERE summoner_stats.puuid IN (${pkg.Prisma.join(puuids)})
                     AND match.queue IN ('5v5 Draft Pick games', '5v5 Ranked Solo games', '5v5 Ranked Flex games', 'Clash games')
                     AND (
                         ((summoner_stats.kills * 2 + summoner_stats.assists) / (summoner_stats.deaths * 2) < 1.3 AND summoner_stats.deaths - summoner_stats.kills > 2 AND summoner_stats.deaths > 3)

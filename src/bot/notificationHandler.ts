@@ -19,7 +19,7 @@ export class NotificationHandler {
      * Handle the notification (send necessary messages).
      * @param payload Payload from the Postgres notification
      */
-    handle = async (payload: string): Promise<Result<null>> => {
+    public handle = async (payload: string): Promise<Result<null>> => {
         // Parse the payload
         const statsResult = this.parsePayload(payload)
         if (!statsResult.ok) return statsResult

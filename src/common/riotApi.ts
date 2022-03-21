@@ -65,7 +65,7 @@ export class RiotApi {
      * @param summonerName Summoner name to query by
      * @returns Summoner info
      */
-    getSummoner = async (summonerName: string) =>
+    public getSummoner = async (summonerName: string) =>
         this.getData(
             `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURI(
                 summonerName
@@ -78,7 +78,7 @@ export class RiotApi {
      * @param puuid PUUID of summoner
      * @returns Summoner info.
      */
-    getSummonerFromPuuid = async (puuid: string) =>
+    public getSummonerFromPuuid = async (puuid: string) =>
         this.getData(
             `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`,
             isSummonerResponse
@@ -90,7 +90,7 @@ export class RiotApi {
      * @param origin An optional start time to get matches from
      * @returns Array of match IDs
      */
-    getSummonerMatchIds = async (puuid: string, origin?: number) =>
+    public getSummonerMatchIds = async (puuid: string, origin?: number) =>
         this.getData(
             `https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5${
                 origin ? `&startTime=${origin}` : ''
@@ -103,7 +103,7 @@ export class RiotApi {
      * @param id Match ID to query
      * @returns Data about match
      */
-    getMatch = async (id: string) =>
+    public getMatch = async (id: string) =>
         this.getData(
             `https://americas.api.riotgames.com/lol/match/v5/matches/${id}`,
             isMatchResponse

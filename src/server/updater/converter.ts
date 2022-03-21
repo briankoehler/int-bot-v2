@@ -72,7 +72,9 @@ export abstract class Converter {
      * @param id Queue constant ID
      * @returns Both the name and map the match was in
      */
-    static convertQueueIdToNameAndMap = async (id: number): Promise<Result<[string, string]>> => {
+    public static convertQueueIdToNameAndMap = async (
+        id: number
+    ): Promise<Result<[string, string]>> => {
         if (!Converter.initialized) return { ok: false, value: Error('Converter not initialized') }
 
         if (Converter.queueMap[id] !== undefined) return { ok: true, value: Converter.queueMap[id] }
@@ -84,7 +86,7 @@ export abstract class Converter {
      * @param id Champion constant ID
      * @returns Name of champion
      */
-    static convertChampionIdToName = async (id: number): Promise<Result<string>> => {
+    public static convertChampionIdToName = async (id: number): Promise<Result<string>> => {
         if (!Converter.initialized) return { ok: false, value: Error('Converter not initialized') }
 
         if (Converter.championMap[id] !== undefined)

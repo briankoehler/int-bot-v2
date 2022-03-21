@@ -6,7 +6,7 @@ module.exports = {
     'extends': [
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
-        'prettier/@typescript-eslint',
+        'prettier'
     ],
     'parser': '@typescript-eslint/parser',
     'parserOptions': {
@@ -22,6 +22,21 @@ module.exports = {
         'quotes': ['error', 'single', { 'avoidEscape': true }],
         'semi': ['error', 'never'],
         '@typescript-eslint/no-unused-vars': 'error',
-        '@typescript-eslint/no-namespace': 0
+        '@typescript-eslint/no-namespace': 0,
+        '@typescript-eslint/explicit-member-accessibility': [
+            'error',
+            {
+                'accessibility': 'explicit',
+                'overrides': {
+                    'constructors': 'no-public'
+                }
+            }
+        ],
+        '@typescript-eslint/ban-ts-comment': [
+            'error',
+            {
+                'ts-ignore': 'allow-with-description'
+            }
+        ]
     }
 }

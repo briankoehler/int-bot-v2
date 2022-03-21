@@ -42,14 +42,14 @@ describe('payload handling', () => {
 
             expect(result).toMatchObject({ ok: false })
             expect(result.value).not.toBeNull()
-            expect(result.value!.message).toContain('Unable to parse notification payload:')
+            expect(result.value?.message).toContain('Unable to parse notification payload:')
         })
 
         // expect(mockedHelpers.isSummonerStats).toHaveBeenCalledTimes(2)
     })
 
     it('does not care about ARAMS', async () => {
-        // @ts-ignore
+        // @ts-ignore - Prisma mocking doesn't work
         prismaMock.match.findFirst.mockResolvedValue({ queue: '5v5 ARAM games' })
 
         const payload = JSON.stringify(validPayload)
@@ -59,9 +59,9 @@ describe('payload handling', () => {
     })
 
     it('cannot find the summoner', async () => {
-        // @ts-ignore
+        // @ts-ignore - Prisma mocking doesn't work
         prismaMock.match.findFirst.mockResolvedValue({ queue: '5v5 Draft Pick games' })
-        // @ts-ignore
+        // @ts-ignore - Prisma mocking doesn't work
         prismaMock.summoner.findFirst.mockResolvedValue(null)
 
         const payload = JSON.stringify(validPayload)
@@ -69,12 +69,13 @@ describe('payload handling', () => {
 
         expect(result).toMatchObject({ ok: false })
         expect(result.value).not.toBeNull()
-        expect(result.value!.message).toContain('Unable to identify summoner:')
+        expect(result.value?.message).toContain('Unable to identify summoner:')
     })
 
     it('attempts to send messages when everything works', async () => {
         // Suppress console errors, because we're expecting them due to the fact that
         // we cannot mock sending Discord messages
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         jest.spyOn(console, 'error').mockImplementation(() => {})
 
         const following: Guild[] = [
@@ -86,11 +87,11 @@ describe('payload handling', () => {
             name: 'test'
         }
 
-        // @ts-ignore
+        // @ts-ignore - Prisma mocking doesn't work
         prismaMock.match.findFirst.mockResolvedValue({ queue: '5v5 Draft Pick games' })
-        // @ts-ignore
+        // @ts-ignore - Prisma mocking doesn't work
         prismaMock.summoner.findFirst.mockResolvedValue(summoner)
-        // @ts-ignore
+        // @ts-ignore - Prisma mocking doesn't work
         prismaMock.guildFollowing.findMany.mockResolvedValue(following)
         mockedGetMessage.getMessage.mockReturnValue({ ok: false, value: Error('Message error') })
 
@@ -109,6 +110,7 @@ describe('int scorelines', () => {
 
     beforeAll(() => {
         const client = new discord.Client({ intents: [] })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         globalPool.isInt = (new NotificationHandler(client) as any).isInt
     })
 

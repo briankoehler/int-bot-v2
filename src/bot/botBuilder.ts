@@ -17,7 +17,7 @@ export class BotBuilder {
      * @param intents Desired intents for client
      * @returns this
      */
-    setIntents = (intents: BitFieldResolvable<IntentsString, number>) => {
+    public setIntents = (intents: BitFieldResolvable<IntentsString, number>) => {
         this.intents = intents
         return this
     }
@@ -27,7 +27,7 @@ export class BotBuilder {
      * @param dir Relative directory containing command files
      * @returns this
      */
-    buildCommands = (dir: string) => {
+    public buildCommands = (dir: string) => {
         this.commandDirs.push(dir)
         return this
     }
@@ -37,7 +37,7 @@ export class BotBuilder {
      * @param dir Relative directory containing event files
      * @returns this
      */
-    buildEvents = (dir: string) => {
+    public buildEvents = (dir: string) => {
         this.eventDirs.push(dir)
         return this
     }
@@ -46,9 +46,9 @@ export class BotBuilder {
      * Build the designed Discord.js client.
      * @returns Discord.js client
      */
-    build = async () => {
+    public build = async () => {
         const client = new Client({ intents: this.intents })
-        // @ts-ignore
+        // @ts-ignore - Discord.js typing are wrong and do not contain commands on client
         client.commands = new Collection<string, Command>()
 
         await this.realBuildCommands(client)
@@ -71,7 +71,7 @@ export class BotBuilder {
             commandFiles.forEach(async file => {
                 const { command } = await import(`.${dir}/${file}`)
                 if (!isCommand(command)) throw Error(`Command file not parsable: ${file}`)
-                // @ts-ignore
+                // @ts-ignore - Discord.js typing are wrong and do not contain commands on client
                 client.commands.set(command.data.name, command)
             })
         })
@@ -106,7 +106,7 @@ export class BotBuilder {
         client.on('interactionCreate', async interaction => {
             if (!interaction.isCommand()) return
 
-            // @ts-ignore
+            // @ts-ignore - Discord.js typing are wrong and do not contain commands on client
             const command: Command = client.commands.get(interaction.commandName)
             if (!command) return
 

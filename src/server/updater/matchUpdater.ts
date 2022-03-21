@@ -9,7 +9,7 @@ export abstract class MatchUpdater extends Updater {
     /**
      * Main function to get updates
      */
-    static update = async () => {
+    public static update = async () => {
         const puuids = new Set((await MatchUpdater.getSummoners()).map(summoner => summoner.puuid))
         const newMatches = await MatchUpdater.getMatchIds(puuids)
         const didInit = await Converter.init()

@@ -5,7 +5,7 @@ export abstract class SummonersUpdater extends Updater {
     /**
      * Main function to get updates
      */
-    static update = async () => {
+    public static update = async () => {
         const summoners = await SummonersUpdater.getSummoners()
 
         for (const summoner of summoners) {

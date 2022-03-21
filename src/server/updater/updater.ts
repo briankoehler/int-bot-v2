@@ -5,7 +5,7 @@ import { prisma } from '../../db/dbClient'
 
 export abstract class Updater {
     protected static riot: RiotApi = new RiotApi(config.RIOT_TOKEN)
-    abstract update(): Promise<void> // For some reason this doesn't actually work
+    public abstract update(): Promise<void> // For some reason this doesn't actually work
 
     /**
      * Get PUUIDs located in db.
