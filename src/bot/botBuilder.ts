@@ -1,7 +1,5 @@
 import { BitFieldResolvable, Client, Collection, DMChannel, IntentsString } from 'discord.js'
 import fs from 'fs'
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
 import { Command, isCommand, isEvent } from '../common/types/bot'
 
 /**
@@ -64,16 +62,20 @@ export class BotBuilder {
      */
     private realBuildCommands = async (client: Client) => {
         this.commandDirs.forEach(async dir => {
-            const commandFiles = fs
-                .readdirSync(`${dirname(fileURLToPath(import.meta.url))}${dir}`)
-                .filter(f => f.endsWith('.js'))
+            try {
+                const commandFiles = fs
+                    .readdirSync(`${__dirname}${dir}`)
+                    .filter(f => f.endsWith('.js'))
 
-            commandFiles.forEach(async file => {
-                const { command } = await import(`.${dir}/${file}`)
-                if (!isCommand(command)) throw Error(`Command file not parsable: ${file}`)
-                // @ts-ignore - Discord.js typing are wrong and do not contain commands on client
-                client.commands.set(command.data.name, command)
-            })
+                commandFiles.forEach(async file => {
+                    const { command } = await import(`.${dir}/${file}`)
+                    if (!isCommand(command)) throw Error(`Command file not parsable: ${file}`)
+                    // @ts-ignore - Discord.js typing are wrong and do not contain commands on client
+                    client.commands.set(command.data.name, command)
+                })
+            } catch (e) {
+                console.error(e)
+            }
         })
     }
 
@@ -83,18 +85,22 @@ export class BotBuilder {
      */
     private realBuildEvents = async (client: Client) => {
         this.eventDirs.forEach(dir => {
-            const eventFiles = fs
-                .readdirSync(`${dirname(fileURLToPath(import.meta.url))}${dir}`)
-                .filter(f => f.endsWith('.js'))
+            try {
+                const eventFiles = fs
+                    .readdirSync(`${__dirname}${dir}`)
+                    .filter(f => f.endsWith('.js'))
 
-            eventFiles.forEach(async file => {
-                const { event } = await import(`./events/${file}`)
-                if (!isEvent(event)) throw Error(`Event file not parsable: ${file}`)
+                eventFiles.forEach(async file => {
+                    const { event } = await import(`./events/${file}`)
+                    if (!isEvent(event)) throw Error(`Event file not parsable: ${file}`)
 
-                if (event.once)
-                    client.once(event.name, async (...args) => await event.execute(args))
-                else client.on(event.name, async (...args) => await event.execute(...args))
-            })
+                    if (event.once)
+                        client.once(event.name, async (...args) => await event.execute(args))
+                    else client.on(event.name, async (...args) => await event.execute(...args))
+                })
+            } catch (e) {
+                console.error(e)
+            }
         })
     }
 
