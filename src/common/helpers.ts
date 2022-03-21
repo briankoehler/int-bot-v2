@@ -2,7 +2,7 @@ import pkg, { SummonerStats } from '@prisma/client'
 import { Result } from './types/errors'
 
 export const isObject = (x: unknown): x is Record<string, unknown> => {
-    return typeof x === 'object' && x !== null
+    return typeof x === 'object' && x !== null && !Array.isArray(x)
 }
 
 export const performSafePrismaOperation = async <T>(
