@@ -20,7 +20,7 @@ it('successfully builds bot', async () => {
         eventDirs: ['/events', '/events2']
     })
 
-    // This assumes that the commands and events files exist.
+    // This assumes that the commands and events dirs exist.
     // Perhaps good to include in this test anyway to make sure its there.
     await expect(
         new BotBuilder()
@@ -29,4 +29,24 @@ it('successfully builds bot', async () => {
             .buildEvents('/events')
             .build()
     ).resolves.toBeInstanceOf(Client)
+})
+
+it('logs errors when dirs do not exist', async () => {
+    // Suppress console errors, because we're expecting them due to the fact that
+    // we cannot mock sending Discord messages
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    const consoleSpy = jest.spyOn(console, 'error')
+    const builder = new BotBuilder()
+
+    await expect(
+        builder
+            .setIntents(['GUILD_INTEGRATIONS', 'GUILD_MESSAGES'])
+            .buildCommands('/fakeCommands')
+            .buildEvents('/fakeEvents')
+            .build()
+    ).resolves.toBeInstanceOf(Client)
+
+    expect(consoleSpy).toHaveBeenCalledTimes(2)
 })

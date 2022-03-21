@@ -2,6 +2,8 @@ import { BitFieldResolvable, Client, Collection, DMChannel, IntentsString } from
 import fs from 'fs'
 import { Command, isCommand, isEvent } from '../common/types/bot'
 
+type directoryPrefix = `/${string}`
+
 /**
  * Build a Discord.js using helper methods.
  */
@@ -25,7 +27,7 @@ export class BotBuilder {
      * @param dir Relative directory containing command files
      * @returns this
      */
-    public buildCommands = (dir: string) => {
+    public buildCommands = (dir: directoryPrefix) => {
         this.commandDirs.push(dir)
         return this
     }
@@ -35,7 +37,7 @@ export class BotBuilder {
      * @param dir Relative directory containing event files
      * @returns this
      */
-    public buildEvents = (dir: string) => {
+    public buildEvents = (dir: directoryPrefix) => {
         this.eventDirs.push(dir)
         return this
     }
