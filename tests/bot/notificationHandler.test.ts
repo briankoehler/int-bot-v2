@@ -103,6 +103,16 @@ describe('payload handling', () => {
 
         expect(mockedGetMessage.getMessage).toHaveBeenCalledTimes(2)
     })
+
+    it('ignores a non-int payload', async () => {
+        const copy = validPayload
+        copy.kills = 10
+        copy.deaths = 0
+        await expect(globalPool.handler.handle(JSON.stringify(copy))).resolves.toStrictEqual({
+            ok: true,
+            value: null
+        })
+    })
 })
 
 describe('int scorelines', () => {
