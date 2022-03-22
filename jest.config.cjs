@@ -3,5 +3,7 @@ module.exports = {
     clearMocks: true,
     preset: 'ts-jest',
     testEnvironment: 'node',
-    setupFilesAfterEnv: ['<rootDir>/tests/testUtil.ts']
-};
+    setupFilesAfterEnv: ['<rootDir>/tests/testUtil.ts'],
+    collectCoverage: true,
+    collectCoverageFrom: ['src/**/*.ts']
+}

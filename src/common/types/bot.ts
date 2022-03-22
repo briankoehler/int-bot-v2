@@ -35,7 +35,15 @@ export const isCommand = (x: unknown): x is Command => {
 
 export const isEvent = (x: unknown): x is Event => {
     if (!isObject(x)) return false
-    return 'name' in x && 'once' in x && 'execute' in x
+    return (
+        'name' in x &&
+        'once' in x &&
+        'execute' in x &&
+        typeof x.execute === 'function' &&
+        typeof x.name === 'string' &&
+        typeof x.once === 'boolean' &&
+        x.name.length > 0
+    )
 }
 
 export const isTemplatesDoc = (x: unknown): x is TemplatesDoc => {

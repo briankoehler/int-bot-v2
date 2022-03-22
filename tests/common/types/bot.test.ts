@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
 import { CacheType, CommandInteraction } from 'discord.js'
-import { Command, isCommand } from '../../../src/common/types/bot'
+import { Command, isCommand, isEvent } from '../../../src/common/types/bot'
 import { Result } from '../../../src/common/types/errors'
 
 describe('isCommand', () => {
@@ -57,5 +57,69 @@ describe('isCommand', () => {
         }
 
         expect(isCommand(invalidCommand)).toBe(false)
+    })
+})
+
+describe('isEvent', () => {
+    it('succeeds on real event', () => {
+        const validEvent = {
+            name: 'test',
+            once: false,
+            execute: function (...x: unknown[]): Promise<void> {
+                console.log(x)
+                throw new Error('Function not implemented.')
+            }
+        }
+
+        expect(isEvent(validEvent)).toBe(true)
+    })
+
+    it('fails on empty name', () => {
+        const invalidEvent = {
+            name: '',
+            once: false,
+            execute: function (...x: unknown[]): Promise<void> {
+                console.log(x)
+                throw new Error('Function not implemented.')
+            }
+        }
+
+        expect(isEvent(invalidEvent)).toBe(false)
+    })
+
+    it('fails on null name', () => {
+        const invalidEvent = {
+            name: null,
+            once: false,
+            execute: function (...x: unknown[]): Promise<void> {
+                console.log(x)
+                throw new Error('Function not implemented.')
+            }
+        }
+
+        expect(isEvent(invalidEvent)).toBe(false)
+    })
+
+    it('fails on bad once', () => {
+        const invalidEvent = {
+            name: 'test',
+            once: 'not a boolean',
+            execute: function (...x: unknown[]): Promise<void> {
+                console.log(x)
+                throw new Error('Function not implemented.')
+            }
+        }
+
+        expect(isEvent(invalidEvent)).toBe(false)
+    })
+
+    it('fails on bad execute function', () => {
+        const invalidEvent = {
+            name: 'test',
+            once: false,
+            execute: 'not a function'
+        }
+
+        expect(isEvent(invalidEvent)).toBe(false)
     })
 })
