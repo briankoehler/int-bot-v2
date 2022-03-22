@@ -1,3 +1,4 @@
+import { SummonerStats } from '@prisma/client'
 import * as helpers from '../../src/common/helpers'
 
 describe('isObject', () => {
@@ -27,4 +28,62 @@ describe('isObject', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     it('fails on function', () => expect(helpers.isObject(() => {})).toBe(false))
+})
+
+describe('isSummonerStats', () => {
+    it('succeeds on SummonerStats type', () => {
+        const validStats: SummonerStats = {
+            id: '',
+            puuid: '',
+            matchId: '',
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+            champion: '',
+            position: '',
+            team: 'BLUE',
+            totalTimeDead: 0,
+            challenges: ''
+        }
+        expect(helpers.isSummonerStats(validStats)).toBe(true)
+    })
+
+    it('succeeds on type that prisma returns', () => {
+        const validStats = {
+            id: '',
+            puuid: '',
+            match_id: '',
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+            champion: '',
+            position: '',
+            team: 'BLUE',
+            total_time_dead: 0,
+            challenges: ''
+        }
+        expect(helpers.isSummonerStats(validStats)).toBe(true)
+    })
+
+    it('fails when a property is missing', () => {
+        const validStats: SummonerStats = {
+            id: '',
+            puuid: '',
+            matchId: '',
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+            champion: '',
+            position: '',
+            team: 'BLUE',
+            totalTimeDead: 0,
+            challenges: ''
+        }
+        expect(helpers.isSummonerStats(validStats)).toBe(true)
+        Object.entries(validStats).forEach(([key]) => {
+            const stats = { ...validStats }
+            delete (stats as never)[key]
+            expect(helpers.isSummonerStats(stats)).toBe(false)
+        })
+    })
 })

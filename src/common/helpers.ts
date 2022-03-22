@@ -56,7 +56,7 @@ export const performSafePrismaOperation = async <T>(
 }
 
 export const isSummonerStats = (x: unknown): x is SummonerStats => {
-    const properties = [
+    const properties1 = [
         'id',
         'puuid',
         'match_id',
@@ -69,9 +69,26 @@ export const isSummonerStats = (x: unknown): x is SummonerStats => {
         'total_time_dead',
         'challenges'
     ]
+    const properties2 = [
+        'id',
+        'puuid',
+        'matchId',
+        'kills',
+        'deaths',
+        'assists',
+        'champion',
+        'position',
+        'team',
+        'totalTimeDead',
+        'challenges'
+    ]
+
     if (!isObject(x)) return false
-    if (!properties.every(p => p in x)) return false
-    x.totalTimeDead = x.total_time_dead
-    x.matchId = x.match_id
-    return true
+    if (properties1.every(p => p in x)) {
+        x.totalTimeDead = x.total_time_dead
+        x.matchId = x.match_id
+        return true
+    }
+    if (properties2.every(p => p in x)) return true
+    return false
 }
