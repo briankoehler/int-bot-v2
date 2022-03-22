@@ -58,6 +58,11 @@ describe('isCommand', () => {
 
         expect(isCommand(invalidCommand)).toBe(false)
     })
+
+    it('fails on non-object', () => {
+        const invalidCommand = 'not an object'
+        expect(isCommand(invalidCommand)).toBe(false)
+    })
 })
 
 describe('isEvent', () => {
@@ -120,6 +125,11 @@ describe('isEvent', () => {
             execute: 'not a function'
         }
 
+        expect(isEvent(invalidEvent)).toBe(false)
+    })
+
+    it('fails on non-object', () => {
+        const invalidEvent = 'not an object'
         expect(isEvent(invalidEvent)).toBe(false)
     })
 })

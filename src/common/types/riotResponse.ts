@@ -170,7 +170,6 @@ export const isErrorResponse = (response: unknown): response is ErrorResponse =>
     if (!isObject(response)) return false
     if (!isObject(response.status)) return false
 
-    if (!('status' in response)) return false
     if ('message' in response.status && 'status_code' in response.status) return true
     return false
 }
