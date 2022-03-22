@@ -86,4 +86,8 @@ describe('isSummonerStats', () => {
             expect(helpers.isSummonerStats(stats)).toBe(false)
         })
     })
+
+    it('fails on null', () => expect(helpers.isSummonerStats(null)).toBe(false))
+
+    it('fails on undefined', () => expect(helpers.isSummonerStats(undefined)).toBe(false))
 })

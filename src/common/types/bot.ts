@@ -23,7 +23,14 @@ export interface TemplatesDoc {
 
 export const isCommand = (x: unknown): x is Command => {
     if (!isObject(x)) return false
-    return 'data' in x && 'execute' in x && 'guildOnly' in x
+    return (
+        'data' in x &&
+        'execute' in x &&
+        'guildOnly' in x &&
+        typeof x.execute === 'function' &&
+        typeof x.guildOnly === 'boolean' &&
+        isObject(x.data)
+    )
 }
 
 export const isEvent = (x: unknown): x is Event => {
