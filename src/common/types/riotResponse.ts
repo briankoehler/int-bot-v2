@@ -155,15 +155,15 @@ export type MatchIdsResponse = string[]
 export const isSummonerResponse = (response: unknown): response is SummonerResponse => {
     if (!isObject(response)) return false
     const properties = [
-        'id',
-        'accountId',
-        'puuid',
-        'name',
-        'profileIconId',
-        'revisionDate',
-        'summonerLevel'
+        ['id', 'string'],
+        ['accountId', 'string'],
+        ['puuid', 'string'],
+        ['name', 'string'],
+        ['profileIconId', 'number'],
+        ['revisionDate', 'number'],
+        ['summonerLevel', 'number']
     ]
-    return properties.every(p => p in response)
+    return properties.every(p => p[0] in response && typeof response[p[0]] === p[1])
 }
 
 export const isErrorResponse = (response: unknown): response is ErrorResponse => {
