@@ -10,10 +10,7 @@ export const performSafePrismaOperation = async <T>(
     errorMsg = ''
 ): Promise<Result<T>> => {
     try {
-        return {
-            ok: true,
-            value: await callback()
-        }
+        return { ok: true, value: await callback() }
     } catch (e) {
         if (e instanceof pkg.Prisma.PrismaClientKnownRequestError) {
             return {

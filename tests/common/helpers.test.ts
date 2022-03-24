@@ -1,7 +1,26 @@
-import { SummonerStats } from '@prisma/client'
-import * as helpers from '../../src/common/helpers'
+import * as prisma from '@prisma/client'
+import * as errors from '../prismaErrors'
+
+jest.mock('@prisma/client', () => ({
+    __esmodule: true,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...(jest.requireActual('@prisma/client') as any),
+    Prisma: {
+        PrismaClientKnownRequestError: errors.PrismaClientKnownRequestError,
+        PrismaClientUnknownRequestError: errors.PrismaClientUnknownRequestError,
+        PrismaClientRustPanicError: errors.PrismaClientRustPanicError,
+        PrismaClientInitializationError: errors.PrismaClientInitializationError,
+        PrismaClientValidationError: errors.PrismaClientValidationError
+    }
+}))
+
+let helpers: typeof import('../../src/common/helpers')
 
 describe('isObject', () => {
+    beforeAll(async () => {
+        helpers = await import('../../src/common/helpers')
+    })
+
     it('succeeds on empty object', () => expect(helpers.isObject({})).toBe(true))
 
     it('succeeds on object', () => expect(helpers.isObject({ a: 1 })).toBe(true))
@@ -31,8 +50,12 @@ describe('isObject', () => {
 })
 
 describe('isSummonerStats', () => {
+    beforeAll(async () => {
+        helpers = await import('../../src/common/helpers')
+    })
+
     it('succeeds on SummonerStats type', () => {
-        const validStats: SummonerStats = {
+        const validStats: prisma.SummonerStats = {
             id: '',
             puuid: '',
             matchId: '',
@@ -66,7 +89,7 @@ describe('isSummonerStats', () => {
     })
 
     it('fails when a property is missing', () => {
-        const validStats: SummonerStats = {
+        const validStats: prisma.SummonerStats = {
             id: '',
             puuid: '',
             matchId: '',
@@ -90,4 +113,79 @@ describe('isSummonerStats', () => {
     it('fails on null', () => expect(helpers.isSummonerStats(null)).toBe(false))
 
     it('fails on undefined', () => expect(helpers.isSummonerStats(undefined)).toBe(false))
+})
+
+describe('performSafePrismaOperation', () => {
+    beforeAll(async () => {
+        helpers = await import('../../src/common/helpers')
+    })
+
+    it('succeeds on a valid callback', async () => {
+        const result = await helpers.performSafePrismaOperation(() => Promise.resolve('foo'))
+        expect(result).toStrictEqual({
+            ok: true,
+            value: 'foo'
+        })
+    })
+
+    it('fails from PrismaClientKnownRequestError', async () => {
+        const error = new errors.PrismaClientKnownRequestError(
+            'test message',
+            'test code',
+            'test details'
+        )
+        const result = await helpers.performSafePrismaOperation(async () => {
+            throw error
+        })
+        expect(result.ok).toBe(false)
+        expect(result.value).toBeInstanceOf(Error)
+    })
+
+    it('fails from PrismaClientUnknownRequestError', async () => {
+        const error = new errors.PrismaClientUnknownRequestError('test message', 'test code')
+        const result = await helpers.performSafePrismaOperation(async () => {
+            throw error
+        })
+        expect(result.ok).toBe(false)
+        expect(result.value).toBeInstanceOf(Error)
+    })
+
+    it('fails from PrismaClientRustPanicError', async () => {
+        const error = new errors.PrismaClientRustPanicError('test message', 'test code')
+        const result = await helpers.performSafePrismaOperation(async () => {
+            throw error
+        })
+        expect(result.ok).toBe(false)
+        expect(result.value).toBeInstanceOf(Error)
+    })
+
+    it('fails from PrismaClientInitializationError', async () => {
+        const error = new errors.PrismaClientInitializationError(
+            'test message',
+            'test code',
+            'test details'
+        )
+        const result = await helpers.performSafePrismaOperation(async () => {
+            throw error
+        })
+        expect(result.ok).toBe(false)
+        expect(result.value).toBeInstanceOf(Error)
+    })
+
+    it('fails from PrismaClientValidationError', async () => {
+        const error = new errors.PrismaClientValidationError('test message')
+        const result = await helpers.performSafePrismaOperation(async () => {
+            throw error
+        })
+        expect(result.ok).toBe(false)
+        expect(result.value).toBeInstanceOf(Error)
+    })
+
+    it('fails from unknown type error', async () => {
+        const result = await helpers.performSafePrismaOperation(async () => {
+            throw 'oh no!'
+        })
+        expect(result.ok).toBe(false)
+        expect(result.value).toBeInstanceOf(Error)
+    })
 })
