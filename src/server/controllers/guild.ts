@@ -19,7 +19,7 @@ guild.delete('/all', async (req, res) => {
         res.sendStatus(500)
         return
     }
-    res.status(200).send()
+    res.sendStatus(200)
 })
 
 guild.delete('/:guildId', async (req, res) => {
@@ -33,5 +33,5 @@ guild.delete('/:guildId', async (req, res) => {
         res.sendStatus(500)
         return
     }
-    res.status(200).send()
+    res.sendStatus(200)
 })
