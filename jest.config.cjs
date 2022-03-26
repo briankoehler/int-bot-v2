@@ -2,9 +2,10 @@
 module.exports = {
     globals: {
         'ts-jest': {
-            'useESM': true
+            useESM: true
         }
     },
+    watchAll: true,
     clearMocks: true,
     preset: 'ts-jest',
     testEnvironment: 'node',
