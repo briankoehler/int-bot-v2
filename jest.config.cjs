@@ -12,5 +12,8 @@ module.exports = {
     setupFilesAfterEnv: ['<rootDir>/tests/testUtil.ts'],
     collectCoverage: true,
     collectCoverageFrom: ['src/**/*.ts'],
-    coverageReporters: ['lcov']
+    coverageReporters: ['lcov'],
+    transform: {
+        '^.+\\.(ts|tsx)?$': 'ts-jest'
+    }
 }

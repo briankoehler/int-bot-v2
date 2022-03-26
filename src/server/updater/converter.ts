@@ -15,9 +15,14 @@ export abstract class Converter {
      * the data that Riot provides on every conversion.
      */
     public static init = async (): Promise<Result<null>> => {
-        const version: string = (
-            await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')
-        ).data[0]
+        const versionResp = await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')
+        if (versionResp.status !== 200)
+            return {
+                ok: false,
+                value: Error(`Could not get version data: ${versionResp.statusText}`)
+            }
+
+        const version: string = versionResp.data[0]
 
         // Construct an id-to-champion map for current version
         const champResp = await axios.get(
