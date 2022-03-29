@@ -61,15 +61,26 @@ export class RiotApi {
     }
 
     /**
-     * Queries Riot API for summoner PUUID.
+     * Queries Riot API for summoner PUUID. To use puuid instead, use getSummonerByPuuid.
      * @param summonerName Summoner name to query by
-     * @returns PUUID of summoner
+     * @returns Summoner info
      */
     getSummoner = async (summonerName: string) =>
         this.getData(
             `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURI(
                 summonerName
             )}`,
+            isSummonerResponse
+        )
+
+    /**
+     * Queries Riot API for summoner info. To use name instead, use getSummoner.
+     * @param puuid PUUID of summoner
+     * @returns Summoner info.
+     */
+    getSummonerFromPuuid = async (puuid: string) =>
+        this.getData(
+            `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`,
             isSummonerResponse
         )
 
